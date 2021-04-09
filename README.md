@@ -1,2 +1,2 @@
-# test-zip-slip
-A project to test fixes for a zip slip vulnerability  
+# test-zip
+A project to test zip vulnerabilities
