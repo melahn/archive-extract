@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -20,8 +21,6 @@ import java.util.Set;
 public class ZipSlipExample {
 
     private static final Logger logger = LogManager.getLogger("ZipSlipExample");
-    private static final char PATH_SEPARATOR = java.nio.file.FileSystems.getDefault().getSeparator().charAt(0);
-
     /**
      * Using test.tgz or the name supplied in args[0], unzip the tgz without
      * checking for the zip slip issue.
@@ -49,20 +48,28 @@ public class ZipSlipExample {
      * @throws IOException
      */
     private void unzip(String z, Path t) throws IOException {
-        try ( InputStream is = Files.newInputStream(Paths.get(z));
+        try (InputStream is = Files.newInputStream(Paths.get(z));
                 BufferedInputStream bis = new BufferedInputStream(is);
                 GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
                 TarArchiveInputStream tis = new TarArchiveInputStream(gis);) {
             TarArchiveEntry entry;
             while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
                 String name = entry.getName();
-                String dirNameFromEntry = entry.isDirectory() ? entry.getName()
-                        : entry.getName().substring(0, name.lastIndexOf(PATH_SEPARATOR));
-                Path dirNameToCreate = t.resolve(dirNameFromEntry);
-                if (!Files.exists(dirNameToCreate)) {
-                    Files.createDirectories(dirNameToCreate);
-                    logger.info("Directory {} created",dirNameToCreate);
+                Path fileToCreate = t.resolve(name);
+                final int bufferSize = 1024;
+                byte[] data = new byte[bufferSize];
+                // first create the parent directory if it does not exist
+                Path parent = fileToCreate.getParent();
+                if (Files.notExists(parent)) {
+                    Files.createDirectories(parent);
+                    logger.info("Directory {} created", parent);
                 }
+                Path newFile = Files.createFile(fileToCreate);
+                logger.info("File {} created", fileToCreate);
+                while ((tis.read(data, 0, bufferSize)) != -1) {
+                    Files.write(newFile, data, StandardOpenOption.APPEND);
+                }
+                logger.info("File {} created", fileToCreate);
             }
         } catch (IOException e) {
             logger.error("IO Exception unzipping {}", z);
