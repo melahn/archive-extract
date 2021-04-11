@@ -16,7 +16,10 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ZipSlipExample {
 
@@ -34,6 +37,7 @@ public class ZipSlipExample {
             ZipSlipExample zse = new ZipSlipExample();
             Path tempDir = zse.createTempDir();
             zse.unzip(zipFileName, tempDir);
+            zse.unzipEmbeddedZips(tempDir);
         } catch (IOException e) {
             logger.error("IOException: {}", e.getMessage());
         }
@@ -95,4 +99,25 @@ public class ZipSlipExample {
             throw e;
         }
     }
+
+     /**
+     * Unpacks any tgz files found in a directory
+     *
+     * @param d the name of the directory in which to look
+     */
+      private void unzipEmbeddedZips (Path d) throws IOException {
+        try (Stream<Path> w = Files.walk(d,10)) {
+            List<Path> tgzFiles = w.filter(Files::isRegularFile)
+            .filter(p -> p.getFileName().toString().endsWith(".tgz"))
+            .collect(Collectors.toList());
+            for (Path z : tgzFiles) {
+                logger.info("tgz file: {} found" , z); 
+                unzip(z.getFileName().toString(),z.getParent());
+            }
+        }
+        catch (IOException e) {
+            logger.error("IOException looking for embedded zip files");
+        }
+        
+      }
 }
