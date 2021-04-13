@@ -39,6 +39,7 @@ public class ZipSlipExample {
             logger.info("Zip File: {}", zipFileName);
             ZipSlipExample zse = new ZipSlipExample();
             Path tempDir = zse.createTempDir();
+            logger.info("Unzip Target Directory: {}", tempDir);
             zse.unzip(zipFileName, tempDir);
             zse.unzipEmbeddedZips(tempDir);
         } catch (IOException e) {
@@ -108,7 +109,6 @@ public class ZipSlipExample {
             FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions
                     .asFileAttribute(PosixFilePermissions.fromString("rwxr-----"));
             p = Files.createTempDirectory(this.getClass().getCanonicalName() + "." + "Temporary.", attr);
-            logger.info("{} will be used as the directory.", p);
             return p;
         } catch (IOException e) {
             logger.error("IO Exception creating directory {}", p);
