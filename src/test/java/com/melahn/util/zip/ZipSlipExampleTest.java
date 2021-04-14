@@ -12,8 +12,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-//Zip File: /Users/melahn/development/visualstudio/test-zip-slip/src/test/resources/test-chart-file-with-embedded-tgz.tgz
-///var/folders/kw/tt3g68js2rl5jx1dwwvzc56c0000gn/T/com.melahn.util.zip.ZipSlipExample.Temporary.4123651246412250680 will be used as the directory.
 public class ZipSlipExampleTest { 
 
     private final PrintStream initialOut = System.out;
