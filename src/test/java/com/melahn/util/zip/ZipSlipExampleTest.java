@@ -18,16 +18,16 @@ public class ZipSlipExampleTest {
    
     @Test
     public void unzipTgzWithoutEmbeddedTgz() {
-        Path unzipDir = unzip(Paths.get("src/test/resources/test-chart-file-without-embedded-tgz.tgz").toAbsolutePath());
+        Path unzipDir = unzip(Paths.get("src/test/resources/test-chart-file-without-embedded-tgz-files.tgz").toAbsolutePath());
         assertTrue(Files.exists(getUnzipDirectory(stringOut)));
-        System.out.println(String.format("tgz without embedded tgz files unzipped to %s", unzipDir));
+        System.out.println(String.format("tgz file without embedded tgz files unzipped to %s", unzipDir));
     }
 
     @Test
     public void unzipTgzWithEmbeddedTgz() {
-        Path unzipDir = unzip(Paths.get("src/test/resources/test-chart-file-with-embedded-tgz.tgz").toAbsolutePath());
+        Path unzipDir = unzip(Paths.get("src/test/resources/test-chart-file-with-embedded-tgz-files.tgz").toAbsolutePath());
         assertTrue(Files.exists(getUnzipDirectory(stringOut)));
-        System.out.println(String.format("tgz with embedded tgz files unzipped to %s", unzipDir));
+        System.out.println(String.format("tgz file with embedded tgz files unzipped to %s", unzipDir));
     }
 
     private Path unzip(Path tgzFile) {
