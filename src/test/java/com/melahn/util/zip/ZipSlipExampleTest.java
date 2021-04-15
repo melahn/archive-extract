@@ -14,33 +14,27 @@ public class ZipSlipExampleTest {
 
     private final PrintStream initialOut = System.out;
     private final ByteArrayOutputStream testOut = new ByteArrayOutputStream();
-    private String stringOut;
    
     @Test
     public void unzipTgzWithoutEmbeddedTgz() {
-        Path unzipDir = unzip(Paths.get("src/test/resources/test-chart-file-without-embedded-tgz-files.tgz").toAbsolutePath());
-        assertTrue(Files.exists(getUnzipDirectory(stringOut)));
+        String unzipDir = unzip(Paths.get("src/test/resources/test-chart-file-without-embedded-tgz-files.tgz").toAbsolutePath());
+        assertTrue(Files.exists(getUnzipDirectory(unzipDir)));
         System.out.println(String.format("tgz file without embedded tgz files unzipped to %s", unzipDir));
     }
 
     @Test
     public void unzipTgzWithEmbeddedTgz() {
-        Path unzipDir = unzip(Paths.get("src/test/resources/test-chart-file-with-embedded-tgz-files.tgz").toAbsolutePath());
-        assertTrue(Files.exists(getUnzipDirectory(stringOut)));
+        String unzipDir = unzip(Paths.get("src/test/resources/test-chart-file-with-embedded-tgz-files.tgz").toAbsolutePath());
+        assertTrue(Files.exists(getUnzipDirectory(unzipDir)));
         System.out.println(String.format("tgz file with embedded tgz files unzipped to %s", unzipDir));
     }
 
-    private Path unzip(Path tgzFile) {
-        try {
-            System.setOut(new PrintStream(testOut));
-            String[] args = new String[] { tgzFile.toString() };
-            ZipSlipExample.main(args);
-            System.setOut(initialOut);
-            stringOut = new String(testOut.toByteArray(), 0, 1024);
-        } catch (Exception e) {
-
-        }
-        return getUnzipDirectory(stringOut);
+    private String unzip(Path tgzFile) {
+        System.setOut(new PrintStream(testOut));
+        String[] args = new String[] { tgzFile.toString() };
+        ZipSlipExample.main(args);
+        System.setOut(initialOut);
+        return new String(testOut.toByteArray(), 0, 1024);
     }
 
     private Path getUnzipDirectory(String s) {
