@@ -26,7 +26,6 @@ public class ZipSlipExample {
 
     private static final Logger logger = LogManager.getLogger("ZipSlipExample");
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
-
     /**
      * Using test.tgz or the name supplied in args[0], unzip the tgz without
      * checking for the zip slip issue.
@@ -36,8 +35,8 @@ public class ZipSlipExample {
     public static void main(String[] args) {
         try {
             String zipFileName = args.length > 0 ? args[0] : "test.tgz";
-            logger.info("Zip File: {}", zipFileName);
             ZipSlipExample zse = new ZipSlipExample();
+            logger.info("Zip File: {}", zipFileName);
             Path tempDir = zse.createTempDir();
             logger.info("Unzip Target Directory: {}", tempDir);
             zse.unzip(zipFileName, tempDir);
