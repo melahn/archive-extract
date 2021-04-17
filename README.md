@@ -20,8 +20,8 @@ a way for malicious files to be delivered. An example of such an archive can be 
 
 This project checks for this case and throws an exception when found. To see an illustration, run this command.
 
-{code}
+`code`
 
 java -jar target/test-zip-1.0.0-SNAPSHOT.jar src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz
 
-{code}
+`code`
