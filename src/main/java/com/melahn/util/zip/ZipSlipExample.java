@@ -26,13 +26,16 @@ public class ZipSlipExample {
 
     private static final Logger logger = LogManager.getLogger("ZipSlipExample");
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
+    private static final int BUFFER_SIZE=1024;
+    private static final int MAX_DEPTH=20;
+
     /**
      * Using test.tgz or the name supplied in args[0], unzip the tgz without
      * checking for the zip slip issue.
      * 
      * @param args optonally args[0] contains the name of the zip file
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ZipSlipException {
         try {
             String zipFileName = args.length > 0 ? args[0] : "test.tgz";
             ZipSlipExample zse = new ZipSlipExample();
@@ -43,6 +46,9 @@ public class ZipSlipExample {
             zse.unzipEmbeddedZips(tempDir);
         } catch (IOException e) {
             logger.error("IOException: {}", e.getMessage());
+        } catch (ZipSlipException e) {
+            logger.error("ZipSlipException: {}", e.getMessage());
+            throw e;
         }
     }
 
@@ -62,17 +68,18 @@ public class ZipSlipExample {
             TarArchiveEntry entry;
             while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
                 String name = entry.getName();
-                // protect against hidden files and relative names
-                if (name.contains(SEPARATOR) && name.lastIndexOf(SEPARATOR) != name.length() - 1
-                        && (name.substring(name.lastIndexOf(SEPARATOR) + 1, name.length())).startsWith(".")) {
+                if (isHiddenFilename(name)) {
                     logger.info("Entry {} skipped", name);
                     continue;
                 }
                 Path fileToCreate = t.resolve(name);
-                final int bufferSize = 1024;
-                byte[] data = new byte[bufferSize];
-                // Note the order in which the entries appear is not predictable
-                Path parent = fileToCreate.getParent();
+                byte[] data = new byte[BUFFER_SIZE];
+                // Note the order in which the entries appear is not predictable so it is
+                // possible to encounter a file before encountering the directory to which
+                // the file will be extracted
+                Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
+                // Check for the Zip Slip Exception
+                checkForZipSlip(parent, t, name);
                 if (Files.notExists(parent)) { // first create the parent directory if it does not exist
                     Files.createDirectories(parent);
                     logger.info("Directory {} created", parent);
@@ -83,17 +90,14 @@ public class ZipSlipExample {
                 } else if (Files.notExists(fileToCreate)) { // create the file
                     Path newFile = Files.createFile(fileToCreate);
                     logger.info("File {} created", fileToCreate);
-                    while ((tis.read(data, 0, bufferSize)) != -1) {
+                    while ((tis.read(data, 0, BUFFER_SIZE)) != -1) {
                         Files.write(newFile, data, StandardOpenOption.APPEND);
                     }
                     logger.info("File {} created", fileToCreate);
                 }
             }
             logger.info("File {} unzipped", z);
-        } catch (IOException e) {
-            logger.error("IO Exception unzipping {}", z);
-            throw e;
-        }
+        } 
     }
 
     /**
@@ -121,7 +125,7 @@ public class ZipSlipExample {
      * @param d the name of the directory in which to look
      */
     private void unzipEmbeddedZips(Path d) throws IOException {
-        try (Stream<Path> w = Files.walk(d, 10)) {
+        try (Stream<Path> w = Files.walk(d, MAX_DEPTH)) {
             List<Path> tgzFiles = w.filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".tgz")).collect(Collectors.toList());
             for (Path z : tgzFiles) {
@@ -131,6 +135,17 @@ public class ZipSlipExample {
             }
         } catch (IOException e) {
             logger.error("IOException looking for embedded zip files");
+        }
+    }
+
+    private boolean isHiddenFilename(String s) {
+        return s.contains(SEPARATOR) && s.lastIndexOf(SEPARATOR) != s.length() - 1
+                && (s.substring(s.lastIndexOf(SEPARATOR) + 1, s.length())).startsWith(".");
+    }
+
+    private void checkForZipSlip(Path p, Path t, String n) throws ZipSlipException {
+        if (!p.startsWith(t)) {
+            throw new ZipSlipException(String.format("File %s lies outside of target directory which is a security exposure", n));
         }
     }
 }
