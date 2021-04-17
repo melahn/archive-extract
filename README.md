@@ -18,6 +18,8 @@ Fortunately, Sonar catches this case and will alert you to the exposure. See thi
 Consider the case where an archive contains a file which, when extracted, would be extracted in a directory outside the target directory. This would be
 a way for malicious files to be delivered. An example of such an archive can be found [here](./src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz).  This file contains a file named *evil.txt* that would be extracted to the parent directory of the unzip directory.
 
-This project checks for this case and throws an exception when found. To see an illustration, run this command.
+This project checks for this case and throws an exception when found. 
+
+To see an illustration, run this command.
 
     java -jar target/test-zip-1.0.0-SNAPSHOT.jar src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz
