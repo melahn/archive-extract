@@ -2,7 +2,6 @@
 
 A project to test zip vulnerabilities with Sonar
 
-![version](https://img.shields.io/badge/version-1.0.0-SNAPSHOT-green)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 [![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/dashboard?id=melahn_test-zip)
