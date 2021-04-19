@@ -2,6 +2,9 @@ package com.melahn.util.zip;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -9,35 +12,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.junit.Test;
-
 public class ZipSlipExampleTest {
 
     private final PrintStream initialOut = System.out;
     private final ByteArrayOutputStream testOut = new ByteArrayOutputStream();
     private final int UNZIP_OUT_LENGTH = 2048;
-
-     /**
-     * Test an archive without the Zip Slip Vulnerabiluty and which does not contain other archives
-     */
-    @Test
-    public void unzipTgzWithoutEmbeddedTgz() {
-        Path unzipDir = getUnzipDirectory(
-                unzip(prepForUnzip("src/test/resources/test-chart-file-without-embedded-tgz-files.tgz")));
-        assertTrue(Files.exists(unzipDir));
-        System.out.println(String.format("tgz file without embedded tgz files unzipped to %s", unzipDir));
-  }
-
-    /**
-     * Test an archive without the Zip Slip Vulnerabiluty but which contains other archives
-     */
-    @Test
-    public void unzipTgzWithEmbeddedTgz() {
-        Path unzipDir = getUnzipDirectory(
-                unzip(prepForUnzip("src/test/resources/test-chart-file-with-embedded-tgz-files.tgz")));
-        assertTrue(Files.exists(unzipDir));
-        System.out.println(String.format("tgz file with embedded tgz files unzipped to %s", unzipDir));
-    }
 
     /**
      * Test an archive with the Zip Slip Vulnerabiluty
@@ -49,13 +28,26 @@ public class ZipSlipExampleTest {
             ZipSlipExample.main(args);
         });
         System.setOut(initialOut);
+        System.out.println(String.format("SUCCESS: The archive %s was found to have the Zip Slip vulnarability as expected", args[0]));
+    }
+
+    /**
+    * Test archives that don't have the Zip Slip Vulnerability
+    */
+    @ParameterizedTest
+    @ValueSource(strings = { "src/test/resources/test-chart-file-without-embedded-tgz-files.tgz",
+            "src/test/resources/test-chart-file-with-embedded-tgz-files.tgz" })
+    void unzipVariant(String archiveFilename) {
+        Path unzipDir = unzipToPath(archiveFilename);
+        System.out.println(String.format("SUCCESS: Parameterized test with %s. Archive was unzipped to %s", archiveFilename, unzipDir));
     }
 
     /**
      * Unzip the archive
-     * @param a the archie
+     * 
+     * @param a the archive
      * @return a string containing the first part of the redirected output (enough
-     * to parse the name of the directory to which the archive was unzipped)
+     *         to parse the name of the directory to which the archive was unzipped)
      */
     private String unzip(String[] a) {
         ZipSlipExample.main(a);
@@ -64,8 +56,8 @@ public class ZipSlipExampleTest {
     }
 
     /**
-     * Parses the name of the unzip directory from the input string which contains redirected 
-     * output from the archive extraction
+     * Parses the name of the unzip directory from the input string which contains
+     * redirected output from the archive extraction
      * 
      * @param s the outout from the archive extraction
      * @return the Path of the unzip directory
@@ -77,16 +69,31 @@ public class ZipSlipExampleTest {
     }
 
     /**
-     * Redirect standard out to another stream so it cam be inspected to gather information
-     * like the name of the directory to which the archive was unzipped and then constructs
-     * the arguments to be passed to main
+     * Unzips an archive 
+     * 
+     * @oaram a the name of the archive file to unzip
+     * @return a Path to which the archive was unzipped
+     */
+    private Path unzipToPath(String a) {
+        Path unzipDir = getUnzipDirectory(unzip(prepForUnzip(a)));
+        assertTrue(Files.exists(unzipDir));
+        return unzipDir;
+    }
+
+    /**
+     * Redirect standard out to another stream so it cam be inspected to gather
+     * information like the name of the directory to which the archive was unzipped
+     * and then constructs the arguments to be passed to main
      * 
      * @param a The name of the archive
-     * @return a atring array of one element, namely a Path to the archive
+     * @return a atring array of zero or one element, namely a Path to the archive
      */
     private String[] prepForUnzip(String a) {
         System.setOut(new PrintStream(testOut));
-        Path tgzFile = Paths.get(a).toAbsolutePath();
-        return new String[] { tgzFile.toString() };
+        if (!a.isEmpty()) {
+            Path tgzFile = Paths.get(a).toAbsolutePath();
+            return new String[] { tgzFile.toString() };
+        }
+        return new String[] {};
     }
 }
