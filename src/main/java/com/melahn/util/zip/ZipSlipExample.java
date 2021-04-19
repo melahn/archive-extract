@@ -28,6 +28,7 @@ public class ZipSlipExample {
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
     private static final int BUFFER_SIZE=1024;
     private static final int MAX_DEPTH=20;
+    public static final String DEFAULT_TGZ_FILENAME = "test.tgz";
 
     /**
      * Using test.tgz or the name supplied in args[0], unzip the tgz without
@@ -37,7 +38,7 @@ public class ZipSlipExample {
      */
     public static void main(String[] args) throws ZipSlipException {
         try {
-            String zipFileName = args.length > 0 ? args[0] : "test.tgz";
+            String zipFileName = args.length > 0 ? args[0] : DEFAULT_TGZ_FILENAME;
             ZipSlipExample zse = new ZipSlipExample();
             logger.info("Zip File: {}", zipFileName);
             Path tempDir = zse.createTempDir();
