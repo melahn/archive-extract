@@ -36,10 +36,10 @@ public class ZipSlipExampleTest {
     */
     @ParameterizedTest
     @ValueSource(strings = { "src/test/resources/test-chart-file-without-embedded-tgz-files.tgz",
-            "src/test/resources/test-chart-file-with-embedded-tgz-files.tgz" })
+            "src/test/resources/test-chart-file-with-embedded-tgz-files.tgz","" })
     void unzipVariant(String archiveFilename) {
         Path unzipDir = unzipToPath(archiveFilename);
-        System.out.println(String.format("SUCCESS: Parameterized test with %s. Archive was unzipped to %s", archiveFilename, unzipDir));
+        System.out.println(String.format("SUCCESS: Parameterized test with %s. Archive was unzipped to %s", archiveFilename.isEmpty()? "src/test/resources/".concat(ZipSlipExample.DEFAULT_TGZ_FILENAME) : archiveFilename , unzipDir));
     }
 
     /**
@@ -52,7 +52,7 @@ public class ZipSlipExampleTest {
     private String unzip(String[] a) {
         ZipSlipExample.main(a);
         System.setOut(initialOut);
-        return new String(testOut.toByteArray(), 0, UNZIP_OUT_LENGTH);
+        return new String(testOut.toByteArray(), 0, testOut.size() < UNZIP_OUT_LENGTH ? testOut.size() : UNZIP_OUT_LENGTH);
     }
 
     /**
