@@ -46,7 +46,7 @@ public class ZipSlipExample {
             zse.unzip(zipFileName, tempDir);
             zse.unzipEmbeddedZips(tempDir);
         } catch (IOException e) {
-            logger.error("IOException: {}", e.getMessage());
+            logger.error("Exception {}: {}", e.getClass(), e.getMessage());
         } catch (ZipSlipException e) {
             logger.error("ZipSlipException: {}", e.getMessage());
             throw e;
