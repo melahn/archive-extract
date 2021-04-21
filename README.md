@@ -18,7 +18,7 @@ a way for malicious files to be delivered. An example of such an archive can be 
 
 This project contains code that extracts a tgz archive, checks for this vulnerabilty and throws an exception when found.
 
-To try it out, cd to the *target* directory and run this command.
+To try it out, run this command.
 
     java -jar target/test-zip-1.0.0-SNAPSHOT.jar src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz
 
