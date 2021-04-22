@@ -24,4 +24,4 @@ To try it out, run this command.
 
 Benign archives that don't contain the vulnerability are also included in the project.  To try one of them out, run this command.
 
-     java -jar target/test-zip-1.0.0-SNAPSHOT.jar
+     java -jar target/test-zip-1.0.0-SNAPSHOT.jar src/test/resources/test.tgz
