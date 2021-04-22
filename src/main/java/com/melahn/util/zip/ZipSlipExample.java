@@ -31,17 +31,17 @@ public class ZipSlipExample {
     public static final String DEFAULT_TGZ_FILENAME = "test.tgz";
 
     /**
-     * Using test.tgz or the name supplied in args[0], unzip the tgz without
-     * checking for the zip slip issue.
+     * Using test.tgz or the name of some other archive supplied in args[0], 
+     * unzip the archive, checking for the zip slip vulnerability.
      * 
-     * @param args optonally args[0] contains the name of the zip file
+     * @param args optonally args[0] contains the file name of the archive 
      */
     public static void main(String[] args) throws ZipSlipException {
         try {
             String zipFileName = args.length > 0 ? args[0] : DEFAULT_TGZ_FILENAME;
             ZipSlipExample zse = new ZipSlipExample();
             logger.info("Zip File: {}", zipFileName);
-            Path tempDir = zse.createTempDir();
+            Path tempDir = zse.createExtractDir();
             logger.info("Unzip Target Directory: {}", tempDir);
             zse.unzip(zipFileName, tempDir);
             zse.unzipEmbeddedZips(tempDir);
@@ -54,11 +54,10 @@ public class ZipSlipExample {
     }
 
     /**
-     * Induce the Zip Slip security issue by not checking an entry in the file
-     * crossing the boundary of the zip file directory
+     * Extract the files in a tgz archive file
      * 
      * @param z The name of a tgz file
-     * @param t The directory in which to unzip the file
+     * @param t The path in which to unzip the file
      * @throws IOException
      */
     private void unzip(String z, Path t) throws IOException {
@@ -79,16 +78,16 @@ public class ZipSlipExample {
                 // possible to encounter a file before encountering the directory to which
                 // the file will be extracted
                 Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
-                // Check for the Zip Slip Exception
+                // Check for the Zip Slip Vulnerability
                 checkForZipSlip(parent, t, name);
                 if (Files.notExists(parent)) { // first create the parent directory if it does not exist
                     Files.createDirectories(parent);
                     logger.info("Directory {} created", parent);
                 }
-                if (entry.isDirectory() && Files.notExists(fileToCreate)) { // create the directory
+                if (entry.isDirectory() && Files.notExists(fileToCreate)) { // create a directory
                     Files.createDirectory(fileToCreate);
                     logger.info("Directory {} created", fileToCreate);
-                } else if (Files.notExists(fileToCreate)) { // create the file
+                } else if (Files.notExists(fileToCreate)) { // create a file
                     Path newFile = Files.createFile(fileToCreate);
                     logger.info("File {} created", fileToCreate);
                     while ((tis.read(data, 0, BUFFER_SIZE)) != -1) {
@@ -102,12 +101,12 @@ public class ZipSlipExample {
     }
 
     /**
-     * create a directory in which to unzip the file
+     * create a directory in which to extract the archive
      * 
      * @return a Path for the created directory
      * @throws IOException
      */
-    private Path createTempDir() throws IOException {
+    private Path createExtractDir() throws IOException {
         Path p = null;
         try {
             FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions
@@ -139,11 +138,29 @@ public class ZipSlipExample {
         }
     }
 
+    /**
+     * Answers whether a file name is hidden or not 
+     * @param s a file name
+     * @return true if hidden, false otherwise
+     */
     private boolean isHiddenFilename(String s) {
         return s.contains(SEPARATOR) && s.lastIndexOf(SEPARATOR) != s.length() - 1
                 && (s.substring(s.lastIndexOf(SEPARATOR) + 1, s.length())).startsWith(".");
     }
 
+    /**
+     * Checks for the zip slip vulnerability by testing whether a file, if extracted, would
+     * lie outside of the target directory for extracting the archive. If the vulnerability is detected
+     * the method throws the ZipSlipException.
+     * 
+     * For example, if the target extract directory is /foo/target and the file evil.txt would have the 
+     * path /bar/evil.txt, then the method would throw the ZipSlipException.
+     * 
+     * @param p the parent directory of the file, if it were extracted
+     * @param t the target directory where files from the archive are extracted
+     * @param n the name of the file (just used for the exception message, if there is an exception)
+     * @throws ZipSlipException
+     */
     private void checkForZipSlip(Path p, Path t, String n) throws ZipSlipException {
         if (!p.startsWith(t)) {
             throw new ZipSlipException(String.format("File %s lies outside of target directory which is a security exposure", n));
