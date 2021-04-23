@@ -2,6 +2,8 @@ package com.melahn.util.zip;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.AfterAll;
@@ -24,11 +26,12 @@ public class ZipSlipExampleTest {
     private final static int UNZIP_OUT_LENGTH = 2048;
     private final static String DEFAULT_TEST_FILENAME = "test.tgz";
     private final static String DIVIDER = "---------------------------";
+    private final static String ARCHIVE_FILE_CONTAINING_HIDDEN_FILES = "src/test/resources/test-with-hidden-files.tgz";
+
     @BeforeAll
     public static void init() {
         /**
-         * copy the test.tgz file to the project root to prep for the no
-         * parms case
+         * copy the test.tgz file to the project root to prep for the no parms case
          */
         System.out.println(DIVIDER.concat(" TESTS START ").concat(DIVIDER));
         try {
@@ -79,8 +82,8 @@ public class ZipSlipExampleTest {
             ZipSlipExample.main(args);
         });
         System.setOut(initialOut);
-        System.out.println(String
-                .format(String.format("SUCCESS: A NoSuchFileException was thrown as expected for the non-existent file %s", args[0])));
+        System.out.println(String.format(String.format(
+                "SUCCESS: A NoSuchFileException was thrown as expected for the non-existent file %s", args[0])));
     }
 
     /**
@@ -88,13 +91,30 @@ public class ZipSlipExampleTest {
      */
     @ParameterizedTest
     @ValueSource(strings = { "src/test/resources/test-chart-file-without-embedded-tgz-files.tgz",
-            "src/test/resources/test-chart-file-with-embedded-tgz-files.tgz","" })
+            "src/test/resources/test-chart-file-with-embedded-tgz-files.tgz", "" })
     void unzipVariant(String archiveFilename) throws IOException {
         Path unzipDir = unzipToPath(archiveFilename);
         System.out.println(String.format("SUCCESS: Parameterized test with %s. Archive was unzipped to %s",
                 archiveFilename.isEmpty() ? "src/test/resources/".concat(ZipSlipExample.DEFAULT_TGZ_FILENAME)
                         : archiveFilename,
                 unzipDir));
+    }
+
+    /**
+     * Test archives that have hidden files
+     * 
+     * @param s
+     * @return
+     */
+    @Test
+    void unzipWithHiddenFiles() throws IOException {
+        Path unzipDir = unzipToPath(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES);
+        assertFalse(Files.exists(unzipDir.resolve("test-with-hidden-files/.DS_Store"))
+                || Files.exists(unzipDir.resolve("test-with-hidden-files/A/.DS_Store")));
+        System.setOut(initialOut);
+        System.out.println(String.format(String.format(
+                "SUCCESS: The archive %s contains hidden files.  When it was unzipped to %s, the hidden files were not extracted.",
+                ARCHIVE_FILE_CONTAINING_HIDDEN_FILES, unzipDir)));
     }
 
     /**
