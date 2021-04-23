@@ -36,7 +36,7 @@ public class ZipSlipExample {
      * 
      * @param args optonally args[0] contains the file name of the archive 
      */
-    public static void main(String[] args) throws ZipSlipException {
+    public static void main(String[] args) throws ZipSlipException, IOException {
         try {
             String zipFileName = args.length > 0 ? args[0] : DEFAULT_TGZ_FILENAME;
             ZipSlipExample zse = new ZipSlipExample();
@@ -47,6 +47,7 @@ public class ZipSlipExample {
             zse.unzipEmbeddedZips(tempDir);
         } catch (IOException e) {
             logger.error("Exception {}: {}", e.getClass(), e.getMessage());
+            throw e;
         } catch (ZipSlipException e) {
             logger.error("ZipSlipException: {}", e.getMessage());
             throw e;
@@ -73,7 +74,6 @@ public class ZipSlipExample {
                     continue;
                 }
                 Path fileToCreate = t.resolve(name);
-                byte[] data = new byte[BUFFER_SIZE];
                 // Note the order in which the entries appear is not predictable so it is
                 // possible to encounter a file before encountering the directory to which
                 // the file will be extracted
@@ -88,6 +88,7 @@ public class ZipSlipExample {
                     Files.createDirectory(fileToCreate);
                     logger.info("Directory {} created", fileToCreate);
                 } else if (Files.notExists(fileToCreate)) { // create a file
+                    byte[] data = new byte[BUFFER_SIZE];
                     Path newFile = Files.createFile(fileToCreate);
                     logger.info("File {} created", fileToCreate);
                     while ((tis.read(data, 0, BUFFER_SIZE)) != -1) {
