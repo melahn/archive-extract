@@ -17,18 +17,16 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 public class ZipSlipExample {
 
     private static final Logger logger = LogManager.getLogger("ZipSlipExample");
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
     private static final int BUFFER_SIZE=1024;
-    private static final int MAX_DEPTH=20;
     public static final String DEFAULT_TGZ_FILENAME = "test.tgz";
+    private static final String ARCHIVE_EXTENSION = ".tgz";
 
     /**
      * Using test.tgz or the name of some other archive supplied in args[0], 
@@ -44,7 +42,6 @@ public class ZipSlipExample {
             Path tempDir = zse.createExtractDir();
             logger.info("Unzip Target Directory: {}", tempDir);
             zse.unzip(zipFileName, tempDir);
-            zse.unzipEmbeddedZips(tempDir);
         } catch (IOException e) {
             logger.error("Exception {}: {}", e.getClass(), e.getMessage());
             throw e;
@@ -69,7 +66,7 @@ public class ZipSlipExample {
             TarArchiveEntry entry;
             while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
                 String name = entry.getName();
-                if (isHiddenFilename(name)) {
+                if (isHidden(name)) {
                     logger.info("Entry {} skipped", name);
                     continue;
                 }
@@ -95,6 +92,10 @@ public class ZipSlipExample {
                         Files.write(newFile, data, StandardOpenOption.APPEND);
                     }
                     logger.info("File {} created", fileToCreate);
+                    if (isArchive(name)) {
+                        logger.info("An embedded archive {} was found", name);
+                        unzip(newFile.toString(),newFile.getParent()); // recursion
+                    }
                 }
             }
             logger.info("File {} unzipped", z);
@@ -121,32 +122,22 @@ public class ZipSlipExample {
     }
 
     /**
-     * Unpacks any tgz files found in a directory
-     *
-     * @param d the name of the directory in which to look
-     */
-    private void unzipEmbeddedZips(Path d) throws IOException {
-        try (Stream<Path> w = Files.walk(d, MAX_DEPTH)) {
-            List<Path> tgzFiles = w.filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().endsWith(".tgz")).collect(Collectors.toList());
-            for (Path z : tgzFiles) {
-                Path r = d.resolve(z);
-                logger.info("tgz file: {} found", r);
-                unzip(r.toString(), r.getParent());
-            }
-        } catch (IOException e) {
-            logger.error("IOException looking for embedded zip files");
-        }
-    }
-
-    /**
      * Answers whether a file name is hidden or not 
      * @param s a file name
      * @return true if hidden, false otherwise
      */
-    private boolean isHiddenFilename(String s) {
-        return s.contains(SEPARATOR) && s.lastIndexOf(SEPARATOR) != s.length() - 1
+    private boolean isHidden(String s) {
+        return s != null && s.contains(SEPARATOR) && s.lastIndexOf(SEPARATOR) != s.length() - 1
                 && (s.substring(s.lastIndexOf(SEPARATOR) + 1, s.length())).startsWith(".");
+    }
+
+     /**
+     * Answers whether a file name is an archive file
+     * @param s a file name
+     * @return true if an archive file, false otherwise
+     */
+    private boolean isArchive(String s) {
+        return s !=null && s.endsWith(ARCHIVE_EXTENSION);
     }
 
     /**
