@@ -26,7 +26,8 @@ public class ZipSlipExampleTest {
     private final static int UNZIP_OUT_LENGTH = 2048;
     private final static String DEFAULT_TEST_FILENAME = "test.tgz";
     private final static String DIVIDER = "---------------------------";
-    private final static String ARCHIVE_FILE_CONTAINING_HIDDEN_FILES = "src/test/resources/test-with-hidden-files.tgz";
+    private final static String ARCHIVE_FILE_CONTAINING_HIDDEN_FILES = "src/test/resources/test-with-hidden-files";
+    private final static String ARCHIVE_FILE_DEPTH_SIX = "src/test/resources/test-with-depth-six";
 
     @BeforeAll
     public static void init() {
@@ -101,20 +102,30 @@ public class ZipSlipExampleTest {
     }
 
     /**
-     * Test archives that have hidden files
-     * 
-     * @param s
-     * @return
+     * Test archive that has hidden files
      */
     @Test
     void unzipWithHiddenFiles() throws IOException {
-        Path unzipDir = unzipToPath(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES);
-        assertFalse(Files.exists(unzipDir.resolve("test-with-hidden-files/.DS_Store"))
-                || Files.exists(unzipDir.resolve("test-with-hidden-files/A/.DS_Store")));
+        Path unzipDir = unzipToPath(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat(".tgz"));
+        assertFalse(Files.exists(unzipDir.resolve(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat("/.DS_Store")))
+                || Files.exists(unzipDir.resolve(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat("/A/.DS_Store"))));
         System.setOut(initialOut);
         System.out.println(String.format(String.format(
                 "SUCCESS: The archive %s contains hidden files.  When it was unzipped to %s, the hidden files were not extracted.",
-                ARCHIVE_FILE_CONTAINING_HIDDEN_FILES, unzipDir)));
+                ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat(".tgz"), unzipDir)));
+    }
+
+     /**
+     * Test archive that has a depth greater than five (the max depth to prevent extracting a runaway tgz file)
+     */
+    @Test
+    void unzipWithDepthSix() throws IOException {
+        Path unzipDir = unzipToPath(ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"));
+        assertFalse(Files.exists(unzipDir.resolve(ARCHIVE_FILE_DEPTH_SIX)));
+        System.setOut(initialOut);
+        System.out.println(String.format(String.format(
+                "SUCCESS: The archive %s had a depth greater than five, so it was not extracted.",
+                ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"), unzipDir)));
     }
 
     /**
