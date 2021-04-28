@@ -26,6 +26,7 @@ public class ZipSlipExample {
     private static final int BUFFER_SIZE = 1024;
     public static final String DEFAULT_TGZ_FILENAME = "test.tgz";
     private static final String ARCHIVE_EXTENSION = ".tgz";
+    private int depth = 0;
 
     /**
      * Using test.tgz or the name of some other archive supplied in args[0], unzip
@@ -35,13 +36,12 @@ public class ZipSlipExample {
      */
     public static void main(String[] args) throws ZipSlipException, IOException {
         try {
-            Integer depth = 0;
             String zipFileName = args.length > 0 ? args[0] : DEFAULT_TGZ_FILENAME;
             ZipSlipExample zse = new ZipSlipExample();
             logger.info("Zip File: {}", zipFileName);
             Path tempDir = zse.createExtractDir();
             logger.info("Unzip Target Directory: {}", tempDir);
-            zse.unzip(zipFileName, tempDir, depth);
+            zse.unzip(zipFileName, tempDir);
         } catch (IOException e) {
             logger.error("Exception {}: {}", e.getClass(), e.getMessage());
             throw e;
@@ -58,11 +58,12 @@ public class ZipSlipExample {
      * @param t The path in which to unzip the file
      * @throws IOException
      */
-    private void unzip(String z, Path t, Integer d) throws IOException {
-        if (d > 5) {
+    private void unzip(String z, Path t) throws IOException {
+        if (depth > 5) {
             logger.info("Too many layers of embedded archives were found. Extraction halted");
+            return;
         }
-        logger.info("Depth = {}", d);
+        logger.info("Depth = {}", depth++);
         try (InputStream is = Files.newInputStream(Paths.get(z));
                 BufferedInputStream bis = new BufferedInputStream(is);
                 GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
@@ -81,9 +82,10 @@ public class ZipSlipExample {
                 Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
                 // Check for the Zip Slip Vulnerability
                 checkForZipSlip(parent, t, name);
-                processEntry(parent, fileToCreate, name, entry, tis, d);
+                processEntry(parent, fileToCreate, name, entry, tis);
             }
             logger.info("File {} unzipped", z);
+            depth--;
         }
     }
 
@@ -99,7 +101,7 @@ public class ZipSlipExample {
      * @return
      * @throws IOException
      */
-    private void processEntry(Path p, Path f, String n, TarArchiveEntry e, TarArchiveInputStream t, Integer d)
+    private void processEntry(Path p, Path f, String n, TarArchiveEntry e, TarArchiveInputStream t)
             throws IOException {
         if (Files.notExists(p)) { // first create the parent directory if it does not exist
             Files.createDirectories(p);
@@ -118,7 +120,7 @@ public class ZipSlipExample {
             logger.info("File {} created", f);
             if (isArchive(n)) {
                 logger.info("An embedded archive {} was found", n);
-                unzip(newFile.toString(), newFile.getParent(), ++d); // recursion
+                unzip(newFile.toString(), newFile.getParent()); // recursion
             }
         }
     }
