@@ -121,7 +121,7 @@ public class ZipSlipExampleTest {
     @Test
     void unzipWithDepthSix() throws IOException {
         Path unzipDir = unzipToPath(ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"));
-        assertFalse(Files.exists(unzipDir.resolve(ARCHIVE_FILE_DEPTH_SIX)));
+        assertFalse(Files.exists(unzipDir.resolve(ARCHIVE_FILE_DEPTH_SIX.concat("/A/B/C/D/E/F/foo"))));
         System.setOut(initialOut);
         System.out.println(String.format(String.format(
                 "SUCCESS: The archive %s had a depth greater than five, so it was not extracted.",
