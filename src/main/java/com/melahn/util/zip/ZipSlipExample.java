@@ -68,7 +68,7 @@ public class ZipSlipExample {
                 BufferedInputStream bis = new BufferedInputStream(is);
                 GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
                 TarArchiveInputStream tis = new TarArchiveInputStream(gis);) {
-            TarArchiveEntry entry;
+            TarArchiveEntry entry=null;
             while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
                 String name = entry.getName();
                 if (isHidden(name)) {
@@ -82,7 +82,7 @@ public class ZipSlipExample {
                 Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
                 // Check for the Zip Slip Vulnerability
                 checkForZipSlip(parent, t, name);
-                processEntry(parent, fileToCreate, name, entry, tis);
+                processEntry(parent, fileToCreate, entry, tis);
             }
             logger.info("File {} unzipped", z);
             depth--;
@@ -94,14 +94,12 @@ public class ZipSlipExample {
      * 
      * @param p path of the parent directory
      * @param f path of the file to create
-     * @param n name of the archive entry
-     * @param e archive entry
+     * @param e the archive entry
      * @param t input stream to read the entry
-     * @param d depth of embedded archive
      * @return
      * @throws IOException
      */
-    private void processEntry(Path p, Path f, String n, TarArchiveEntry e, TarArchiveInputStream t)
+    private void processEntry(Path p, Path f, TarArchiveEntry e, TarArchiveInputStream t)
             throws IOException {
         if (Files.notExists(p)) { // first create the parent directory if it does not exist
             Files.createDirectories(p);
@@ -118,8 +116,8 @@ public class ZipSlipExample {
                 Files.write(newFile, data, StandardOpenOption.APPEND);
             }
             logger.info("File {} created", f);
-            if (isArchive(n)) {
-                logger.info("An embedded archive {} was found", n);
+            if (isArchive(e.getName())) {
+                logger.info("An embedded archive {} was found", e.getName());
                 unzip(newFile.toString(), newFile.getParent()); // recursion
             }
         }
