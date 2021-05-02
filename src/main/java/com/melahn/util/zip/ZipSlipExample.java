@@ -68,7 +68,7 @@ public class ZipSlipExample {
                 BufferedInputStream bis = new BufferedInputStream(is);
                 GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
                 TarArchiveInputStream tis = new TarArchiveInputStream(gis);) {
-            TarArchiveEntry entry=null;
+            TarArchiveEntry entry = null;
             while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
                 String name = entry.getName();
                 if (isHidden(name)) {
@@ -99,8 +99,7 @@ public class ZipSlipExample {
      * @return
      * @throws IOException
      */
-    private void processEntry(Path p, Path f, TarArchiveEntry e, TarArchiveInputStream t)
-            throws IOException {
+    private void processEntry(Path p, Path f, TarArchiveEntry e, TarArchiveInputStream t) throws IOException {
         if (Files.notExists(p)) { // first create the parent directory if it does not exist
             Files.createDirectories(p);
             logger.info("Directory {} created", p);
@@ -149,8 +148,11 @@ public class ZipSlipExample {
      * @return true if hidden, false otherwise
      */
     protected boolean isHidden(String s) {
-        return s != null && s.contains(SEPARATOR) && s.lastIndexOf(SEPARATOR) != s.length() - 1
-                && (s.substring(s.lastIndexOf(SEPARATOR) + 1, s.length())).startsWith(".");
+        // strip any trailing slash to test for both hidden files and directories
+        String t = s != null && s.endsWith(SEPARATOR) ? s.substring(0, s.length() - 1) : s; 
+        return t != null && !t.contentEquals(".") && !t.contentEquals("..") // not null and not just relative directories 
+                && (t.contains(SEPARATOR) && (t.substring(t.lastIndexOf(SEPARATOR) + 1, t.length())).startsWith(".") // last segment starts with a dot
+                || (!t.contains(SEPARATOR) && t.startsWith("."))); // just a filename with a leading dot
     }
 
     /**

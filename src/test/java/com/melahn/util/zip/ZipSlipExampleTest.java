@@ -131,15 +131,33 @@ public class ZipSlipExampleTest {
                         ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"), unzipDir)));
     }
 
-    /**
-     * Test method to detect hidden files
+     /**
+     * Test method to detect hidden file pattern with null input
      */
     @Test
-    void testIsHidden() {
-        ZipSlipExample zse = new ZipSlipExample();
-        String h = "/foo/bar/.i_am_hidden";
-        assertTrue(zse.isHidden(h));
-        System.out.println(String.format("SUCCESS: The file named %s was detected as hidden.", h));
+    void testIsHiddenNull() {
+        assertFalse(new ZipSlipExample().isHidden(null));
+        System.out.println("SUCCESS: The null filename was not detected as hidden.");
+    }   
+    
+     /**
+     * Test method to detect file patterns that are not hidden
+     */
+    @ParameterizedTest
+    @ValueSource(strings = { "", ".", "..","./a/b/c/d","./a/./c/d","./a/.b/c/d","a/b/c/d","a/b/c/d/"})
+    void testIsHiddenFalse(String h) {
+        assertFalse(new ZipSlipExample().isHidden(h));
+        System.out.println(String.format("SUCCESS: Parameterized test with filename %s was not detected as hidden", h));
+    }
+
+    /**
+     * Test method to detect file patterns that are hidden
+     */
+    @ParameterizedTest
+    @ValueSource(strings = { ".a", "/a/b/c/.d","/a/b/c/.d/"})
+    void testIsHiddenTrue(String h) {
+        assertTrue(new ZipSlipExample().isHidden(h));
+        System.out.println(String.format("SUCCESS: Parameterized test with filename %s was detected as hidden", h));
     }
 
     /**
@@ -147,9 +165,8 @@ public class ZipSlipExampleTest {
      */
     @Test
     void testIsArchive() {
-        ZipSlipExample zse = new ZipSlipExample();
         String a = "/foo/bar/.i_am_archive.tgz";
-        assertTrue(zse.isArchive(a));
+        assertTrue(new ZipSlipExample().isArchive(a));
         System.out.println(String.format("SUCCESS: The file named %s was detected as an archive.", a));
     }
 
