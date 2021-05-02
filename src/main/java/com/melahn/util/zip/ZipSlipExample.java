@@ -3,6 +3,7 @@ package com.melahn.util.zip;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,7 +26,6 @@ public class ZipSlipExample {
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
     private static final int BUFFER_SIZE = 1024;
     public static final String DEFAULT_TGZ_FILENAME = "test.tgz";
-    private static final String ARCHIVE_EXTENSION = ".tgz";
     private int depth = 0;
 
     /**
@@ -162,7 +162,7 @@ public class ZipSlipExample {
      * @return true if an archive file, false otherwise
      */
     protected boolean isArchive(String s) {
-        return s != null && s.endsWith(ARCHIVE_EXTENSION);
+        return s != null && GzipUtils.isCompressedFilename(s);
     }
 
     /**
