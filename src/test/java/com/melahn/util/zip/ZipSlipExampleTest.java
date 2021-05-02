@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -163,11 +164,30 @@ public class ZipSlipExampleTest {
     /**
      * Test method to detect archive files
      */
-    @Test
-    void testIsArchive() {
-        String a = "/foo/bar/.i_am_archive.tgz";
+    @ParameterizedTest
+    @ValueSource(strings = { "a.tgz","a.TGZ", "a.tar.gz","a.tar.GZ"})
+    void testIsArchiveTrue(String a) {
         assertTrue(new ZipSlipExample().isArchive(a));
-        System.out.println(String.format("SUCCESS: The file named %s was detected as an archive.", a));
+        System.out.println(String.format("SUCCESS: The file named %s was correctly detected as an archive.", a));
+    }
+
+    /**
+     * Test method to detect files that are not archives
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {"", "a.tg","a.tar, A.ZIP"})
+    void testIsArchiveFalse(String a) {
+        assertFalse(new ZipSlipExample().isArchive(a));
+        System.out.println(String.format("SUCCESS: The file named %s was correctly detected as not an archive.", a));
+    }
+
+    /**
+     * Test method for handling a null filename in archive detection
+     */
+    @Test
+    void testIsArchiveNull() {
+        assertFalse(new ZipSlipExample().isArchive(null));
+        System.out.println(String.format("SUCCESS: Test that a null filename was not detected as an archive"));
     }
 
     /**
