@@ -129,7 +129,7 @@ public class ZipSlipExample {
      * @return a Path for the created directory
      * @throws IOException
      */
-    private Path createExtractDir() throws IOException {
+    protected Path createExtractDir() throws IOException {
         Path p = null;
         try {
             FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions
@@ -148,7 +148,7 @@ public class ZipSlipExample {
      * @param s a file name
      * @return true if hidden, false otherwise
      */
-    private boolean isHidden(String s) {
+    protected boolean isHidden(String s) {
         return s != null && s.contains(SEPARATOR) && s.lastIndexOf(SEPARATOR) != s.length() - 1
                 && (s.substring(s.lastIndexOf(SEPARATOR) + 1, s.length())).startsWith(".");
     }
@@ -159,7 +159,7 @@ public class ZipSlipExample {
      * @param s a file name
      * @return true if an archive file, false otherwise
      */
-    private boolean isArchive(String s) {
+    protected boolean isArchive(String s) {
         return s != null && s.endsWith(ARCHIVE_EXTENSION);
     }
 

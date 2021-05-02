@@ -3,6 +3,8 @@ package com.melahn.util.zip;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -111,21 +113,59 @@ public class ZipSlipExampleTest {
                 || Files.exists(unzipDir.resolve(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat("/A/.DS_Store"))));
         System.setOut(initialOut);
         System.out.println(String.format(String.format(
-                "SUCCESS: The archive %s contains hidden files.  When it was unzipped to %s, the hidden files were not extracted.",
+                "SUCCESS: The archive %s contains hidden files. When it was unzipped to %s, the hidden files were not extracted.",
                 ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat(".tgz"), unzipDir)));
     }
 
-     /**
-     * Test archive that has a depth greater than five (the max depth to prevent extracting a runaway tgz file)
+    /**
+     * Test archive that has a depth greater than five (the max depth to prevent
+     * extracting a runaway tgz file)
      */
     @Test
     void unzipWithDepthSix() throws IOException {
         Path unzipDir = unzipToPath(ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"));
         assertFalse(Files.exists(unzipDir.resolve(ARCHIVE_FILE_DEPTH_SIX.concat("/A/B/C/D/E/F/foo"))));
         System.setOut(initialOut);
-        System.out.println(String.format(String.format(
-                "SUCCESS: The archive %s had a depth greater than five, so it was not extracted.",
-                ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"), unzipDir)));
+        System.out.println(String
+                .format(String.format("SUCCESS: The archive %s had a depth greater than five, so extraction to %s was halted.",
+                        ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"), unzipDir)));
+    }
+
+    /**
+     * Test method to detect hidden files
+     */
+    @Test
+    void testIsHidden() {
+        ZipSlipExample zse = new ZipSlipExample();
+        String h = "/foo/bar/.i_am_hidden";
+        assertTrue(zse.isHidden(h));
+        System.out.println(String.format("SUCCESS: The file named %s was detected as hidden.", h));
+    }
+
+    /**
+     * Test method to detect archive files
+     */
+    @Test
+    void testIsArchive() {
+        ZipSlipExample zse = new ZipSlipExample();
+        String a = "/foo/bar/.i_am_archive.tgz";
+        assertTrue(zse.isArchive(a));
+        System.out.println(String.format("SUCCESS: The file named %s was detected as an archive.", a));
+    }
+
+    /**
+     * Test IO Exception creating the target directory
+     * 
+     * @throws IOException
+     */
+    @Test
+    void testIOExceptionCreatingExtractDirectory() throws IOException {
+        ZipSlipExample zseMock = mock(ZipSlipExample.class);
+        doThrow(IOException.class).when(zseMock).createExtractDir();
+        assertThrows(IOException.class, () -> {
+            zseMock.createExtractDir();
+        });
+        System.out.println("SUCCESS: Handling of an IO Exception when creating the extract directory was tested.");
     }
 
     /**
