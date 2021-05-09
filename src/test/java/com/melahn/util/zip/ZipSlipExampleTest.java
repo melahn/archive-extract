@@ -8,18 +8,27 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Set;
 
 public class ZipSlipExampleTest {
 
@@ -126,25 +135,25 @@ public class ZipSlipExampleTest {
         Path unzipDir = unzipToPath(ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"));
         assertFalse(Files.exists(unzipDir.resolve(ARCHIVE_FILE_DEPTH_SIX.concat("/A/B/C/D/E/F/foo"))));
         System.setOut(initialOut);
-        System.out.println(String
-                .format(String.format("SUCCESS: The archive %s had a depth greater than five, so extraction to %s was halted.",
+        System.out.println(String.format(
+                String.format("SUCCESS: The archive %s had a depth greater than five, so extraction to %s was halted.",
                         ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"), unzipDir)));
     }
 
-     /**
+    /**
      * Test method to detect hidden file pattern with null input
      */
     @Test
     void testIsHiddenNull() {
         assertFalse(new ZipSlipExample().isHidden(null));
         System.out.println("SUCCESS: The null filename was not detected as hidden.");
-    }   
-    
-     /**
+    }
+
+    /**
      * Test method to detect file patterns that are not hidden
      */
     @ParameterizedTest
-    @ValueSource(strings = { "", ".", "..","./a/b/c/d","./a/./c/d","./a/.b/c/d","a/b/c/d","a/b/c/d/"})
+    @ValueSource(strings = { "", ".", "..", "./a/b/c/d", "./a/./c/d", "./a/.b/c/d", "a/b/c/d", "a/b/c/d/" })
     void testIsHiddenFalse(String h) {
         assertFalse(new ZipSlipExample().isHidden(h));
         System.out.println(String.format("SUCCESS: Parameterized test with filename %s was not detected as hidden", h));
@@ -154,7 +163,7 @@ public class ZipSlipExampleTest {
      * Test method to detect file patterns that are hidden
      */
     @ParameterizedTest
-    @ValueSource(strings = { ".a", "/a/b/c/.d","/a/b/c/.d/"})
+    @ValueSource(strings = { ".a", "/a/b/c/.d", "/a/b/c/.d/" })
     void testIsHiddenTrue(String h) {
         assertTrue(new ZipSlipExample().isHidden(h));
         System.out.println(String.format("SUCCESS: Parameterized test with filename %s was detected as hidden", h));
@@ -164,7 +173,7 @@ public class ZipSlipExampleTest {
      * Test method to detect archive files
      */
     @ParameterizedTest
-    @ValueSource(strings = { "a.tgz","a.TGZ", "a.tar.gz","a.tar.GZ"})
+    @ValueSource(strings = { "a.tgz", "a.TGZ", "a.tar.gz", "a.tar.GZ" })
     void testIsArchiveTrue(String a) {
         assertTrue(new ZipSlipExample().isArchive(a));
         System.out.println(String.format("SUCCESS: The file named %s was correctly detected as an archive.", a));
@@ -174,7 +183,7 @@ public class ZipSlipExampleTest {
      * Test method to detect files that are not archives
      */
     @ParameterizedTest
-    @ValueSource(strings = {"", "a.tg","a.tar, A.ZIP"})
+    @ValueSource(strings = { "", "a.tg", "a.tar, A.ZIP" })
     void testIsArchiveFalse(String a) {
         assertFalse(new ZipSlipExample().isArchive(a));
         System.out.println(String.format("SUCCESS: The file named %s was correctly detected as not an archive.", a));
@@ -202,6 +211,86 @@ public class ZipSlipExampleTest {
             zseMock.createExtractDir();
         });
         System.out.println("SUCCESS: Handling of an IO Exception when creating the extract directory was tested.");
+    }
+
+    @Test
+    void testArchiveEntryDirectoryNotExist() throws IOException {
+        TarArchiveEntry entry = null;
+        FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions
+                .asFileAttribute(PosixFilePermissions.fromString("rwxr-----"));
+        Path targetDirectory = Files.createTempDirectory("testArchiveEntryDirectoryNotExist", attr);
+        try (InputStream is = Files.newInputStream(Paths.get("src/test/resources/test.tgz"));
+                BufferedInputStream bis = new BufferedInputStream(is);
+                GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
+                TarArchiveInputStream tis = new TarArchiveInputStream(gis);) {
+                    //            while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null && !entry.isDirectory()) {
+            while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
+                String name = entry.getName();
+                Path fileToCreate = targetDirectory.resolve(name).normalize();
+                Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
+                ByteArrayOutputStream archiveEntry = new ByteArrayOutputStream();
+                System.setOut(new PrintStream(archiveEntry));
+                new ZipSlipExample().processEntry(parent, fileToCreate, entry, tis);
+                System.setOut(initialOut);
+                assertTrue(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
+                Files.delete(fileToCreate); 
+                archiveEntry.close();
+                System.out.println("SUCCESS: Handling of an entry containing a directory was tested.");
+                Files.delete(targetDirectory);
+                break;
+            }
+            if (Files.exists(targetDirectory)) {
+                Files.delete(targetDirectory); /// it should be empty at this point, if not the IO Exception will happen
+            }
+        } catch (IOException e) {
+            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory was tested.", e.getMessage()));
+        }
+    }
+
+    @Test
+    void testArchiveEntryDirectoryExist() throws IOException {
+        TarArchiveEntry entry = null;
+        FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions
+                .asFileAttribute(PosixFilePermissions.fromString("rwxr-----"));
+        Path targetDirectory = Files.createTempDirectory("testArchiveEntryDirectoryExist", attr);
+        Files.createDirectory(targetDirectory.resolve("test")); 
+        try (InputStream is = Files.newInputStream(Paths.get("src/test/resources/test.tgz"));
+                BufferedInputStream bis = new BufferedInputStream(is);
+                GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
+                TarArchiveInputStream tis = new TarArchiveInputStream(gis);) {
+            while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null && entry.isDirectory()) {
+            //while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
+                String name = entry.getName();
+                Path fileToCreate = targetDirectory.resolve(name).normalize();
+                Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
+                ByteArrayOutputStream archiveEntry = new ByteArrayOutputStream();
+                System.setOut(new PrintStream(archiveEntry));
+                new ZipSlipExample().processEntry(parent, fileToCreate, entry, tis);
+                System.setOut(initialOut);
+                assertFalse(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
+                Files.delete(fileToCreate); 
+                archiveEntry.close();
+                System.out.println("SUCCESS: Handling of an entry containing a directory that already exists was tested.");
+                Files.delete(targetDirectory);
+                break;
+            }
+            if (Files.exists(targetDirectory)) {
+                Files.delete(targetDirectory); /// it should be empty at this point, if not the IO Exception will happen
+            }
+        } catch (IOException e) {
+            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory was tested.", e.getMessage()));
+        }
+    }
+
+    /**
+     * Answers true if the log contains a particular entry
+     * 
+     * @param bais the log
+     * @param s entry being looked for
+     * @return the Path of the unzip directory
+     */
+    private boolean logContains(ByteArrayOutputStream bais, String s) {
+        return bais.toString().contains(s);
     }
 
     /**

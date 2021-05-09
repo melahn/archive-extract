@@ -99,7 +99,7 @@ public class ZipSlipExample {
      * @return
      * @throws IOException
      */
-    private void processEntry(Path p, Path f, TarArchiveEntry e, TarArchiveInputStream t) throws IOException {
+    protected void processEntry(Path p, Path f, TarArchiveEntry e, TarArchiveInputStream t) throws IOException {
         if (Files.notExists(p)) { // first create the parent directory if it does not exist
             Files.createDirectories(p);
             logger.info("Directory {} created", p);
