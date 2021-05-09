@@ -1,5 +1,7 @@
 # create a compressed archive that has a depth of six
 # compressed archive members
+rm -rf test-with-depth-six
+rm -f test-with-depth-six.tgz
 mkdir -p test-with-depth-six/A/B/C/D/E/F
 echo foo > test-with-depth-six/A/B/C/D/E/F/foo
 tar -cvzf test-with-depth-six/A/B/C/D/E/F.tgz -C test-with-depth-six/A/B/C/D/E  --exclude ".DS_Store" F/foo
