@@ -3,32 +3,33 @@ package com.melahn.util.zip;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
+
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.MockedStatic.Verification;
 
 public class ZipSlipExampleTest {
 
@@ -202,14 +203,20 @@ public class ZipSlipExampleTest {
      * Test IO Exception creating the target directory
      * 
      * @throws IOException
+     * @throws ClassNotFoundException
      */
     @Test
     void testIOExceptionCreatingExtractDirectory() throws IOException {
-        ZipSlipExample zseMock = mock(ZipSlipExample.class);
-        doThrow(IOException.class).when(zseMock).createExtractDir();
-        assertThrows(IOException.class, () -> {
-            zseMock.createExtractDir();
-        });
+        FileAttribute<Set<PosixFilePermission>> a = PosixFilePermissions
+                .asFileAttribute(PosixFilePermissions.fromString("rwxr-----"));
+        ZipSlipExample zse = new ZipSlipExample();
+        String d = zse.getClass().getCanonicalName() + "." + "Temporary.";
+        try (MockedStatic<Files> fMock = Mockito.mockStatic(Files.class)) {
+            fMock.when((Verification) Files.createTempDirectory(d, a)).thenThrow(IOException.class);
+            assertThrows(IOException.class, () -> zse.createExtractDir());
+        } finally {
+            Files.deleteIfExists(Paths.get(d));
+        }
         System.out.println("SUCCESS: Handling of an IO Exception when creating the extract directory was tested.");
     }
 
@@ -223,7 +230,6 @@ public class ZipSlipExampleTest {
                 BufferedInputStream bis = new BufferedInputStream(is);
                 GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
                 TarArchiveInputStream tis = new TarArchiveInputStream(gis);) {
-                    //            while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null && !entry.isDirectory()) {
             while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
                 String name = entry.getName();
                 Path fileToCreate = targetDirectory.resolve(name).normalize();
@@ -233,7 +239,7 @@ public class ZipSlipExampleTest {
                 new ZipSlipExample().processEntry(parent, fileToCreate, entry, tis);
                 System.setOut(initialOut);
                 assertTrue(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
-                Files.delete(fileToCreate); 
+                Files.delete(fileToCreate);
                 archiveEntry.close();
                 System.out.println("SUCCESS: Handling of an entry containing a directory was tested.");
                 Files.delete(targetDirectory);
@@ -243,7 +249,8 @@ public class ZipSlipExampleTest {
                 Files.delete(targetDirectory); /// it should be empty at this point, if not the IO Exception will happen
             }
         } catch (IOException e) {
-            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory was tested.", e.getMessage()));
+            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory was tested.",
+                    e.getMessage()));
         }
     }
 
@@ -253,13 +260,13 @@ public class ZipSlipExampleTest {
         FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions
                 .asFileAttribute(PosixFilePermissions.fromString("rwxr-----"));
         Path targetDirectory = Files.createTempDirectory("testArchiveEntryDirectoryExist", attr);
-        Files.createDirectory(targetDirectory.resolve("test")); 
+        Files.createDirectory(targetDirectory.resolve("test"));
         try (InputStream is = Files.newInputStream(Paths.get("src/test/resources/test.tgz"));
                 BufferedInputStream bis = new BufferedInputStream(is);
                 GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
                 TarArchiveInputStream tis = new TarArchiveInputStream(gis);) {
             while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null && entry.isDirectory()) {
-            //while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
+                // while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
                 String name = entry.getName();
                 Path fileToCreate = targetDirectory.resolve(name).normalize();
                 Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
@@ -268,9 +275,10 @@ public class ZipSlipExampleTest {
                 new ZipSlipExample().processEntry(parent, fileToCreate, entry, tis);
                 System.setOut(initialOut);
                 assertFalse(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
-                Files.delete(fileToCreate); 
+                Files.delete(fileToCreate);
                 archiveEntry.close();
-                System.out.println("SUCCESS: Handling of an entry containing a directory that already exists was tested.");
+                System.out.println(
+                        "SUCCESS: Handling of an entry containing a directory that already exists was tested.");
                 Files.delete(targetDirectory);
                 break;
             }
@@ -278,7 +286,8 @@ public class ZipSlipExampleTest {
                 Files.delete(targetDirectory); /// it should be empty at this point, if not the IO Exception will happen
             }
         } catch (IOException e) {
-            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory was tested.", e.getMessage()));
+            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory was tested.",
+                    e.getMessage()));
         }
     }
 
@@ -286,7 +295,7 @@ public class ZipSlipExampleTest {
      * Answers true if the log contains a particular entry
      * 
      * @param bais the log
-     * @param s entry being looked for
+     * @param s    entry being looked for
      * @return the Path of the unzip directory
      */
     private boolean logContains(ByteArrayOutputStream bais, String s) {
