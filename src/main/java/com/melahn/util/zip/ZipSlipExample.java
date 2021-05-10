@@ -96,7 +96,6 @@ public class ZipSlipExample {
      * @param f path of the file to create
      * @param e the archive entry
      * @param t input stream to read the entry
-     * @return
      * @throws IOException
      */
     protected void processEntry(Path p, Path f, TarArchiveEntry e, TarArchiveInputStream t) throws IOException {
@@ -129,14 +128,17 @@ public class ZipSlipExample {
      * @throws IOException
      */
     protected Path createExtractDir() throws IOException {
-        Path p = null;
+        String t = this.getClass().getCanonicalName() + "." + "Temporary.";
         try {
-            FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions
+            FileAttribute<Set<PosixFilePermission>> a = PosixFilePermissions
                     .asFileAttribute(PosixFilePermissions.fromString("rwxr-----"));
-            p = Files.createTempDirectory(this.getClass().getCanonicalName() + "." + "Temporary.", attr);
+            Path p = Files.createTempDirectory(t, a);
+            if (p == null) {
+                throw new IOException();
+            }
             return p;
         } catch (IOException e) {
-            logger.error("IO Exception creating directory {}", p);
+            logger.error("IO Exception creating directory {}", t);
             throw e;
         }
     }
