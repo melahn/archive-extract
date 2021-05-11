@@ -31,7 +31,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockedStatic.Verification;
 
-public class ZipSlipExampleTest {
+class ZipSlipExampleTest {
 
     private final PrintStream initialOut = System.out;
     private final ByteArrayOutputStream testOut = new ByteArrayOutputStream();
@@ -42,7 +42,7 @@ public class ZipSlipExampleTest {
     private final static String ARCHIVE_FILE_DEPTH_SIX = "src/test/resources/test-with-depth-six";
 
     @BeforeAll
-    public static void init() {
+    static void init() {
         /**
          * copy the test.tgz file to the project root to prep for the no parms case
          */
@@ -56,7 +56,7 @@ public class ZipSlipExampleTest {
     }
 
     @AfterAll
-    public static void cleanup() {
+    static void cleanup() {
         /**
          * if the test.tgz file exists in the project directory, then remove it
          */
@@ -75,7 +75,7 @@ public class ZipSlipExampleTest {
      * Test an archive with the Zip Slip Vulnerabiluty
      */
     @Test
-    public void unzipTgzWithZipSlipVuln() {
+    void unzipTgzWithZipSlipVuln() {
         String[] args = prepForUnzip("src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz");
         assertThrows(ZipSlipException.class, () -> {
             ZipSlipExample.main(args);
@@ -89,7 +89,7 @@ public class ZipSlipExampleTest {
      * Test an archive that does not exist
      */
     @Test
-    public void unzipTgzNoExist() {
+    void unzipTgzNoExist() {
         String[] args = prepForUnzip("notexist.tgz");
         assertThrows(NoSuchFileException.class, () -> {
             ZipSlipExample.main(args);
@@ -101,6 +101,8 @@ public class ZipSlipExampleTest {
 
     /**
      * Test archives that don't have the Zip Slip Vulnerability
+     *      
+     * @throws IOException
      */
     @ParameterizedTest
     @ValueSource(strings = { "src/test/resources/test-chart-file-without-embedded-tgz-files.tgz",
@@ -115,6 +117,8 @@ public class ZipSlipExampleTest {
 
     /**
      * Test archive that has hidden files
+     * 
+     * @throws IOException
      */
     @Test
     void unzipWithHiddenFiles() throws IOException {
@@ -129,7 +133,9 @@ public class ZipSlipExampleTest {
 
     /**
      * Test archive that has a depth greater than five (the max depth to prevent
-     * extracting a runaway tgz file)
+     * extracting a runaway tgz file especially a quine tgz)
+     * 
+     * @throws IOException
      */
     @Test
     void unzipWithDepthSix() throws IOException {
@@ -201,9 +207,8 @@ public class ZipSlipExampleTest {
 
     /**
      * Test IO Exception creating the target directory
-     * 
+     *
      * @throws IOException
-     * @throws ClassNotFoundException
      */
     @Test
     void testIOExceptionCreatingExtractDirectory() throws IOException {
@@ -220,6 +225,11 @@ public class ZipSlipExampleTest {
         System.out.println("SUCCESS: Handling of an IO Exception when creating the extract directory was tested.");
     }
 
+    /**
+     * Test the case where the archive entry contains a directory that does not exist
+     *
+     * @throws IOException
+     */
     @Test
     void testArchiveEntryDirectoryNotExist() throws IOException {
         TarArchiveEntry entry = null;
@@ -241,19 +251,22 @@ public class ZipSlipExampleTest {
                 assertTrue(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
                 Files.delete(fileToCreate);
                 archiveEntry.close();
-                System.out.println("SUCCESS: Handling of an entry containing a directory was tested.");
+                System.out.println("SUCCESS: Handling of an entry containing a directory that does not exist was tested.");
                 Files.delete(targetDirectory);
                 break;
             }
-            if (Files.exists(targetDirectory)) {
-                Files.delete(targetDirectory); /// it should be empty at this point, if not the IO Exception will happen
-            }
+            Files.deleteIfExists(targetDirectory); 
         } catch (IOException e) {
-            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory was tested.",
+            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory that does not exist was tested.",
                     e.getMessage()));
         }
     }
 
+    /**
+     * Test the case where the archive entry contains a directory that does exist
+     *
+     * @throws IOException
+     */
     @Test
     void testArchiveEntryDirectoryExist() throws IOException {
         TarArchiveEntry entry = null;
@@ -286,7 +299,7 @@ public class ZipSlipExampleTest {
                 Files.delete(targetDirectory); /// it should be empty at this point, if not the IO Exception will happen
             }
         } catch (IOException e) {
-            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory was tested.",
+            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory that already exists was tested.",
                     e.getMessage()));
         }
     }
@@ -320,6 +333,7 @@ public class ZipSlipExampleTest {
      * 
      * @oaram a the name of the archive file to unzip
      * @return a Path to which the archive was unzipped
+     * @throws IOException
      */
     private Path unzipToPath(String a) throws IOException {
         Path unzipDir = getUnzipDirectory(unzip(prepForUnzip(a)));
@@ -333,6 +347,7 @@ public class ZipSlipExampleTest {
      * @param a the archive
      * @return a string containing the first part of the redirected output (enough
      *         to parse the name of the directory to which the archive was unzipped)
+     * @throws IOException
      */
     private String unzip(String[] a) throws IOException {
         ZipSlipExample.main(a);
