@@ -31,7 +31,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockedStatic.Verification;
 
-class ZipSlipExampleTest {
+class ArchiveUnpackTest {
 
     private final PrintStream initialOut = System.out;
     private final ByteArrayOutputStream testOut = new ByteArrayOutputStream();
@@ -77,8 +77,8 @@ class ZipSlipExampleTest {
     @Test
     void unzipTgzWithZipSlipVuln() {
         String[] args = prepForUnzip("src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz");
-        assertThrows(ZipSlipException.class, () -> {
-            ZipSlipExample.main(args);
+        assertThrows(ArchiveUnpackException.class, () -> {
+            ArchiveUnpack.main(args);
         });
         System.setOut(initialOut);
         System.out.println(String
@@ -92,7 +92,7 @@ class ZipSlipExampleTest {
     void unzipTgzNoExist() {
         String[] args = prepForUnzip("notexist.tgz");
         assertThrows(NoSuchFileException.class, () -> {
-            ZipSlipExample.main(args);
+            ArchiveUnpack.main(args);
         });
         System.setOut(initialOut);
         System.out.println(String.format(String.format(
@@ -110,7 +110,7 @@ class ZipSlipExampleTest {
     void unzipVariant(String archiveFilename) throws IOException {
         Path unzipDir = unzipToPath(archiveFilename);
         System.out.println(String.format("SUCCESS: Parameterized test with %s. Archive was unzipped to %s",
-                archiveFilename.isEmpty() ? "src/test/resources/".concat(ZipSlipExample.DEFAULT_TGZ_FILENAME)
+                archiveFilename.isEmpty() ? "src/test/resources/".concat(ArchiveUnpack.DEFAULT_TGZ_FILENAME)
                         : archiveFilename,
                 unzipDir));
     }
@@ -152,7 +152,7 @@ class ZipSlipExampleTest {
      */
     @Test
     void testIsHiddenNull() {
-        assertFalse(new ZipSlipExample().isHidden(null));
+        assertFalse(new ArchiveUnpack().isHidden(null));
         System.out.println("SUCCESS: The null filename was not detected as hidden.");
     }
 
@@ -162,7 +162,7 @@ class ZipSlipExampleTest {
     @ParameterizedTest
     @ValueSource(strings = { "", ".", "..", "./a/b/c/d", "./a/./c/d", "./a/.b/c/d", "a/b/c/d", "a/b/c/d/" })
     void testIsHiddenFalse(String h) {
-        assertFalse(new ZipSlipExample().isHidden(h));
+        assertFalse(new ArchiveUnpack().isHidden(h));
         System.out.println(String.format("SUCCESS: Parameterized test with filename %s was not detected as hidden", h));
     }
 
@@ -172,7 +172,7 @@ class ZipSlipExampleTest {
     @ParameterizedTest
     @ValueSource(strings = { ".a", "/a/b/c/.d", "/a/b/c/.d/" })
     void testIsHiddenTrue(String h) {
-        assertTrue(new ZipSlipExample().isHidden(h));
+        assertTrue(new ArchiveUnpack().isHidden(h));
         System.out.println(String.format("SUCCESS: Parameterized test with filename %s was detected as hidden", h));
     }
 
@@ -182,7 +182,7 @@ class ZipSlipExampleTest {
     @ParameterizedTest
     @ValueSource(strings = { "a.tgz", "a.TGZ", "a.tar.gz", "a.tar.GZ" })
     void testIsArchiveTrue(String a) {
-        assertTrue(new ZipSlipExample().isArchive(a));
+        assertTrue(new ArchiveUnpack().isArchive(a));
         System.out.println(String.format("SUCCESS: The file named %s was correctly detected as an archive.", a));
     }
 
@@ -192,7 +192,7 @@ class ZipSlipExampleTest {
     @ParameterizedTest
     @ValueSource(strings = { "", "a.tg", "a.tar, A.ZIP" })
     void testIsArchiveFalse(String a) {
-        assertFalse(new ZipSlipExample().isArchive(a));
+        assertFalse(new ArchiveUnpack().isArchive(a));
         System.out.println(String.format("SUCCESS: The file named %s was correctly detected as not an archive.", a));
     }
 
@@ -201,7 +201,7 @@ class ZipSlipExampleTest {
      */
     @Test
     void testIsArchiveNull() {
-        assertFalse(new ZipSlipExample().isArchive(null));
+        assertFalse(new ArchiveUnpack().isArchive(null));
         System.out.println(String.format("SUCCESS: Test that a null filename was not detected as an archive"));
     }
 
@@ -214,7 +214,7 @@ class ZipSlipExampleTest {
     void testIOExceptionCreatingExtractDirectory() throws IOException {
         FileAttribute<Set<PosixFilePermission>> a = PosixFilePermissions
                 .asFileAttribute(PosixFilePermissions.fromString("rwxr-----"));
-        ZipSlipExample zse = new ZipSlipExample();
+        ArchiveUnpack zse = new ArchiveUnpack();
         String d = zse.getClass().getCanonicalName() + "." + "Temporary.";
         try (MockedStatic<Files> fMock = Mockito.mockStatic(Files.class)) {
             fMock.when((Verification) Files.createTempDirectory(d, a)).thenThrow(IOException.class);
@@ -246,7 +246,7 @@ class ZipSlipExampleTest {
                 Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
                 ByteArrayOutputStream archiveEntry = new ByteArrayOutputStream();
                 System.setOut(new PrintStream(archiveEntry));
-                new ZipSlipExample().processEntry(parent, fileToCreate, entry, tis);
+                new ArchiveUnpack().processEntry(parent, fileToCreate, entry, tis);
                 System.setOut(initialOut);
                 assertTrue(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
                 Files.delete(fileToCreate);
@@ -285,7 +285,7 @@ class ZipSlipExampleTest {
                 Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
                 ByteArrayOutputStream archiveEntry = new ByteArrayOutputStream();
                 System.setOut(new PrintStream(archiveEntry));
-                new ZipSlipExample().processEntry(parent, fileToCreate, entry, tis);
+                new ArchiveUnpack().processEntry(parent, fileToCreate, entry, tis);
                 System.setOut(initialOut);
                 assertFalse(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
                 Files.delete(fileToCreate);
@@ -350,7 +350,7 @@ class ZipSlipExampleTest {
      * @throws IOException
      */
     private String unzip(String[] a) throws IOException {
-        ZipSlipExample.main(a);
+        ArchiveUnpack.main(a);
         System.setOut(initialOut);
         return new String(testOut.toByteArray(), 0,
                 testOut.size() < UNZIP_OUT_LENGTH ? testOut.size() : UNZIP_OUT_LENGTH);

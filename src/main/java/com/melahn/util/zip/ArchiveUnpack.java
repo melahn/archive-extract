@@ -20,24 +20,27 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 
-public class ZipSlipExample {
+public class ArchiveUnpack {
 
-    private static final Logger logger = LogManager.getLogger("ZipSlipExample");
+    public static final String DEFAULT_TGZ_FILENAME = "test.tgz";
+    private static final Logger logger = LogManager.getLogger("ArchiveUnpack");
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
     private static final int BUFFER_SIZE = 1024;
-    public static final String DEFAULT_TGZ_FILENAME = "test.tgz";
     private int depth = 0;
 
     /**
      * Using test.tgz or the name of some other archive supplied in args[0], unzip
-     * the archive, checking for the zip slip vulnerability.
+     * the archive, checking for the zip slip vulnerability and deeply nested
+     * archives.
      * 
      * @param args optonally args[0] contains the file name of the archive
+     * @throws IOException when IO during unpacking
+     * @throws ArchiveUnpackException if a zip slip exception occcurs
      */
-    public static void main(String[] args) throws ZipSlipException, IOException {
+    public static void main(String[] args) throws ArchiveUnpackException, IOException {
         try {
             String zipFileName = args.length > 0 ? args[0] : DEFAULT_TGZ_FILENAME;
-            ZipSlipExample zse = new ZipSlipExample();
+            ArchiveUnpack zse = new ArchiveUnpack();
             logger.info("Zip File: {}", zipFileName);
             Path tempDir = zse.createExtractDir();
             logger.info("Unzip Target Directory: {}", tempDir);
@@ -45,8 +48,8 @@ public class ZipSlipExample {
         } catch (IOException e) {
             logger.error("Exception {}: {}", e.getClass(), e.getMessage());
             throw e;
-        } catch (ZipSlipException e) {
-            logger.error("ZipSlipException: {}", e.getMessage());
+        } catch (ArchiveUnpackException e) {
+            logger.error("ArchiveUnpackException: {}", e.getMessage());
             throw e;
         }
     }
@@ -56,7 +59,7 @@ public class ZipSlipExample {
      * 
      * @param z The name of a tgz file
      * @param t The path in which to unzip the file
-     * @throws IOException
+     * @throws IOException during IO on a tgz entry
      */
     private void unzip(String z, Path t) throws IOException {
         if (depth > 5) {
@@ -96,7 +99,7 @@ public class ZipSlipExample {
      * @param f path of the file to create
      * @param e the archive entry
      * @param t input stream to read the entry
-     * @throws IOException
+     * @throws IOException when an exception occurs creating or reading a file
      */
     protected void processEntry(Path p, Path f, TarArchiveEntry e, TarArchiveInputStream t) throws IOException {
         if (Files.notExists(p)) { // first create the parent directory if it does not exist
@@ -125,7 +128,7 @@ public class ZipSlipExample {
      * create a directory in which to extract the archive
      * 
      * @return a Path for the created directory
-     * @throws IOException
+     * @throws IOException if an IO error creating the dir
      */
     protected Path createExtractDir() throws IOException {
         String t = this.getClass().getCanonicalName() + "." + "Temporary.";
@@ -171,21 +174,21 @@ public class ZipSlipExample {
      * Checks for the zip slip vulnerability by testing whether a file, if
      * extracted, would lie outside of the target directory for extracting the
      * archive. If the vulnerability is detected the method throws the
-     * ZipSlipException.
+     * ArchiveUnpackException.
      * 
      * For example, if the target extract directory is /foo/target and the file
      * evil.txt would have the path /bar/evil.txt, then the method would throw the
-     * ZipSlipException.
+     * ArchiveUnpackException.
      * 
      * @param p the parent directory of the file, if it were extracted
      * @param t the target directory where files from the archive are extracted
      * @param n the name of the file (just used for the exception message, if there
      *          is an exception)
-     * @throws ZipSlipException
+     * @throws ArchiveUnpackException
      */
-    private void checkForZipSlip(Path p, Path t, String n) throws ZipSlipException {
+    private void checkForZipSlip(Path p, Path t, String n) throws ArchiveUnpackException {
         if (!p.startsWith(t)) {
-            throw new ZipSlipException(
+            throw new ArchiveUnpackException(
                     String.format("File %s lies outside of target directory which is a security exposure", n));
         }
     }

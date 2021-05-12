@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration name="testzip">
+<Configuration name="archive-unpack">
   <Appenders>
     <!-- 'follow' is set to allow System.setOut to capture output for test cases -->
     <Console name="Console" target="SYSTEM_OUT" follow="true">
