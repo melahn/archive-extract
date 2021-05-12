@@ -32,8 +32,6 @@
     <sonar.projectKey>melahn_test-zip</sonar.projectKey>
     <sonar.organization>melahn</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <maven.compiler.source>1.8</maven.compiler.source>
   </properties>
   <reporting>
     <plugins>
@@ -89,6 +87,8 @@
         <version>3.2.0</version>
         <configuration>
           <source>8</source>
+          <!--needed if using jdk 11.0.8 -->
+          <detectJavaApiLink>false</detectJavaApiLink>
         </configuration>
         <executions>
           <execution>
@@ -151,12 +151,17 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.1</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <!--source>1.8</source>
+          <target>1.8</target-->
+          <release>8</release>
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>
           <optimize>true</optimize>
-          <compilerArgument>-Xlint:unchecked</compilerArgument>
+          <fork>true</fork>
+          <compilerArgs>
+            <!--https://bugs.openjdk.java.net/browse/JDK-6999068-->
+            <arg>-Xlint:-processing</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
       <plugin>
