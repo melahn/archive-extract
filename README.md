@@ -41,7 +41,7 @@ To try it out, run this command.
 
 #### Nested Archive
 
-Another example of a potentially unsafe archive is one that contains many levels of nested zip files. An extreme example of that would a [quine](https://research.swtch.com/zip) which would expand infinitely. The extractor
+Another example of a potentially unsafe archive is one that contains many levels of nested zip files. An extreme example of that is a [quine](https://research.swtch.com/zip) which would expand infinitely. The extractor
 in this project stops extracting when it finds itself more than five levels deep in a nested archive. An example of such an archive can be found [here](./src/test/resources/test-with-depth-six.tgz).
 
 To try it out, run this command.
