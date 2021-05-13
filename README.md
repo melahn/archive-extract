@@ -1,6 +1,6 @@
-# archive-unpack
+# archive-extract
 
-A project to unpack a compressed archive.
+A project to extract a compressed archive.
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
