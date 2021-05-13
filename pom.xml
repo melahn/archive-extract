@@ -32,6 +32,8 @@
     <sonar.projectKey>melahn_test-zip</sonar.projectKey>
     <sonar.organization>melahn</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    <sonar.log.level>INFO</sonar.log.level>
+    <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
   <reporting>
     <plugins>
