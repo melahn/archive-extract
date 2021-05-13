@@ -20,36 +20,36 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 
-public class ArchiveUnpack {
+public class ArchiveExtract {
 
     public static final String DEFAULT_ARCHIVE_FILENAME = "test.tgz";
-    private static final Logger logger = LogManager.getLogger("ArchiveUnpack");
+    private static final Logger logger = LogManager.getLogger("ArchiveExtract");
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
     private static final int BUFFER_SIZE = 1024;
     private int depth = 0;
 
     /**
-     * Using test.tgz or the name of some other archive supplied in args[0], unzip
+     * Using test.tgz or the name of some other archive supplied in args[0], extract
      * the archive, checking for the zip slip vulnerability and deeply nested
      * archives.
      * 
      * @param args optonally args[0] contains the file name of the archive
-     * @throws IOException when IO during unpacking
-     * @throws ArchiveUnpackException if a zip slip exception occcurs
+     * @throws IOException when IO during extraction
+     * @throws ArchiveExtractException if a zip slip exception occcurs
      */
-    public static void main(String[] args) throws ArchiveUnpackException, IOException {
+    public static void main(String[] args) throws ArchiveExtractException, IOException {
         try {
             String zipFileName = args.length > 0 ? args[0] : DEFAULT_ARCHIVE_FILENAME;
-            ArchiveUnpack zse = new ArchiveUnpack();
+            ArchiveExtract zse = new ArchiveExtract();
             logger.info("Zip File: {}", zipFileName);
             Path tempDir = zse.createExtractDir();
-            logger.info("Unzip Target Directory: {}", tempDir);
+            logger.info("Extract Target Directory: {}", tempDir);
             zse.extract(zipFileName, tempDir);
         } catch (IOException e) {
             logger.error("Exception {}: {}", e.getClass(), e.getMessage());
             throw e;
-        } catch (ArchiveUnpackException e) {
-            logger.error("ArchiveUnpackException: {}", e.getMessage());
+        } catch (ArchiveExtractException e) {
+            logger.error("{}: {}", e.getClass().getName(), e.getMessage());
             throw e;
         }
     }
@@ -58,7 +58,7 @@ public class ArchiveUnpack {
      * Extract the files in a tgz archive file
      * 
      * @param z The name of a tgz file
-     * @param t The path in which to unzip the file
+     * @param t The path in which to extract the file
      * @throws IOException during IO on a tgz entry
      */
     private void extract(String z, Path t) throws IOException {
@@ -174,21 +174,21 @@ public class ArchiveUnpack {
      * Checks for the zip slip vulnerability by testing whether a file, if
      * extracted, would lie outside of the target directory for extracting the
      * archive. If the vulnerability is detected the method throws the
-     * ArchiveUnpackException.
+     * ArchiveExtractException.
      * 
      * For example, if the target extract directory is /foo/target and the file
      * evil.txt would have the path /bar/evil.txt, then the method would throw the
-     * ArchiveUnpackException.
+     * ArchiveExtractException.
      * 
      * @param p the parent directory of the file, if it were extracted
      * @param t the target directory where files from the archive are extracted
      * @param n the name of the file (just used for the exception message, if there
      *          is an exception)
-     * @throws ArchiveUnpackException
+     * @throws ArchiveExtractException
      */
-    private void checkForZipSlip(Path p, Path t, String n) throws ArchiveUnpackException {
+    private void checkForZipSlip(Path p, Path t, String n) throws ArchiveExtractException {
         if (!p.startsWith(t)) {
-            throw new ArchiveUnpackException(
+            throw new ArchiveExtractException(
                     String.format("File %s lies outside of target directory which is a security exposure", n));
         }
     }

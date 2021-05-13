@@ -31,11 +31,11 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockedStatic.Verification;
 
-class ArchiveUnpackTest {
+class ArchiveExtractTest {
 
     private final PrintStream initialOut = System.out;
     private final ByteArrayOutputStream testOut = new ByteArrayOutputStream();
-    private final static int UNZIP_OUT_LENGTH = 2048;
+    private final static int EXTRACT_OUT_LENGTH = 2048;
     private final static String DEFAULT_TEST_FILENAME = "test.tgz";
     private final static String DIVIDER = "---------------------------";
     private final static String ARCHIVE_FILE_CONTAINING_HIDDEN_FILES = "src/test/resources/test-with-hidden-files";
@@ -75,10 +75,10 @@ class ArchiveUnpackTest {
      * Test an archive with the Zip Slip Vulnerabiluty
      */
     @Test
-    void unzipTgzWithZipSlipVuln() {
-        String[] args = prepForUnzip("src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz");
-        assertThrows(ArchiveUnpackException.class, () -> {
-            ArchiveUnpack.main(args);
+    void extractArchiveWithZipSlipVuln() {
+        String[] args = prepForExtract("src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz");
+        assertThrows(ArchiveExtractException.class, () -> {
+            ArchiveExtract.main(args);
         });
         System.setOut(initialOut);
         System.out.println(String
@@ -89,10 +89,10 @@ class ArchiveUnpackTest {
      * Test an archive that does not exist
      */
     @Test
-    void unzipTgzNoExist() {
-        String[] args = prepForUnzip("notexist.tgz");
+    void extractArchiveNoExist() {
+        String[] args = prepForExtract("notexist.tgz");
         assertThrows(NoSuchFileException.class, () -> {
-            ArchiveUnpack.main(args);
+            ArchiveExtract.main(args);
         });
         System.setOut(initialOut);
         System.out.println(String.format(String.format(
@@ -101,18 +101,18 @@ class ArchiveUnpackTest {
 
     /**
      * Test archives that don't have the Zip Slip Vulnerability
-     *      
+     * 
      * @throws IOException
      */
     @ParameterizedTest
     @ValueSource(strings = { "src/test/resources/test-chart-file-without-embedded-tgz-files.tgz",
             "src/test/resources/test-chart-file-with-embedded-tgz-files.tgz", "" })
-    void unzipVariant(String archiveFilename) throws IOException {
-        Path unzipDir = unzipToPath(archiveFilename);
-        System.out.println(String.format("SUCCESS: Parameterized test with %s. Archive was unzipped to %s",
-                archiveFilename.isEmpty() ? "src/test/resources/".concat(ArchiveUnpack.DEFAULT_ARCHIVE_FILENAME)
+    void extractVariant(String archiveFilename) throws IOException {
+        Path extractDir = extractToPath(archiveFilename);
+        System.out.println(String.format("SUCCESS: Parameterized test with %s. Archive was extracted to %s",
+                archiveFilename.isEmpty() ? "src/test/resources/".concat(ArchiveExtract.DEFAULT_ARCHIVE_FILENAME)
                         : archiveFilename,
-                unzipDir));
+                extractDir));
     }
 
     /**
@@ -121,14 +121,14 @@ class ArchiveUnpackTest {
      * @throws IOException
      */
     @Test
-    void unzipWithHiddenFiles() throws IOException {
-        Path unzipDir = unzipToPath(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat(".tgz"));
-        assertFalse(Files.exists(unzipDir.resolve(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat("/.DS_Store")))
-                || Files.exists(unzipDir.resolve(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat("/A/.DS_Store"))));
+    void extractWithHiddenFiles() throws IOException {
+        Path extractDir = extractToPath(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat(".tgz"));
+        assertFalse(Files.exists(extractDir.resolve(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat("/.DS_Store")))
+                || Files.exists(extractDir.resolve(ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat("/A/.DS_Store"))));
         System.setOut(initialOut);
         System.out.println(String.format(String.format(
-                "SUCCESS: The archive %s contains hidden files. When it was unzipped to %s, the hidden files were not extracted.",
-                ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat(".tgz"), unzipDir)));
+                "SUCCESS: The archive %s contains hidden files. When it was extracted to %s, the hidden files were not extracted.",
+                ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat(".tgz"), extractDir)));
     }
 
     /**
@@ -138,13 +138,13 @@ class ArchiveUnpackTest {
      * @throws IOException
      */
     @Test
-    void unzipWithDepthSix() throws IOException {
-        Path unzipDir = unzipToPath(ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"));
-        assertFalse(Files.exists(unzipDir.resolve(ARCHIVE_FILE_DEPTH_SIX.concat("/A/B/C/D/E/F/foo"))));
+    void extractWithDepthSix() throws IOException {
+        Path extractDir = extractToPath(ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"));
+        assertFalse(Files.exists(extractDir.resolve(ARCHIVE_FILE_DEPTH_SIX.concat("/A/B/C/D/E/F/foo"))));
         System.setOut(initialOut);
         System.out.println(String.format(
                 String.format("SUCCESS: The archive %s had a depth greater than five, so extraction to %s was halted.",
-                        ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"), unzipDir)));
+                        ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"), extractDir)));
     }
 
     /**
@@ -152,7 +152,7 @@ class ArchiveUnpackTest {
      */
     @Test
     void testIsHiddenNull() {
-        assertFalse(new ArchiveUnpack().isHidden(null));
+        assertFalse(new ArchiveExtract().isHidden(null));
         System.out.println("SUCCESS: The null filename was not detected as hidden.");
     }
 
@@ -162,7 +162,7 @@ class ArchiveUnpackTest {
     @ParameterizedTest
     @ValueSource(strings = { "", ".", "..", "./a/b/c/d", "./a/./c/d", "./a/.b/c/d", "a/b/c/d", "a/b/c/d/" })
     void testIsHiddenFalse(String h) {
-        assertFalse(new ArchiveUnpack().isHidden(h));
+        assertFalse(new ArchiveExtract().isHidden(h));
         System.out.println(String.format("SUCCESS: Parameterized test with filename %s was not detected as hidden", h));
     }
 
@@ -172,7 +172,7 @@ class ArchiveUnpackTest {
     @ParameterizedTest
     @ValueSource(strings = { ".a", "/a/b/c/.d", "/a/b/c/.d/" })
     void testIsHiddenTrue(String h) {
-        assertTrue(new ArchiveUnpack().isHidden(h));
+        assertTrue(new ArchiveExtract().isHidden(h));
         System.out.println(String.format("SUCCESS: Parameterized test with filename %s was detected as hidden", h));
     }
 
@@ -182,7 +182,7 @@ class ArchiveUnpackTest {
     @ParameterizedTest
     @ValueSource(strings = { "a.tgz", "a.TGZ", "a.tar.gz", "a.tar.GZ" })
     void testIsArchiveTrue(String a) {
-        assertTrue(new ArchiveUnpack().isArchive(a));
+        assertTrue(new ArchiveExtract().isArchive(a));
         System.out.println(String.format("SUCCESS: The file named %s was correctly detected as an archive.", a));
     }
 
@@ -192,7 +192,7 @@ class ArchiveUnpackTest {
     @ParameterizedTest
     @ValueSource(strings = { "", "a.tg", "a.tar, A.ZIP" })
     void testIsArchiveFalse(String a) {
-        assertFalse(new ArchiveUnpack().isArchive(a));
+        assertFalse(new ArchiveExtract().isArchive(a));
         System.out.println(String.format("SUCCESS: The file named %s was correctly detected as not an archive.", a));
     }
 
@@ -201,7 +201,7 @@ class ArchiveUnpackTest {
      */
     @Test
     void testIsArchiveNull() {
-        assertFalse(new ArchiveUnpack().isArchive(null));
+        assertFalse(new ArchiveExtract().isArchive(null));
         System.out.println(String.format("SUCCESS: Test that a null filename was not detected as an archive"));
     }
 
@@ -214,7 +214,7 @@ class ArchiveUnpackTest {
     void testIOExceptionCreatingExtractDirectory() throws IOException {
         FileAttribute<Set<PosixFilePermission>> a = PosixFilePermissions
                 .asFileAttribute(PosixFilePermissions.fromString("rwxr-----"));
-        ArchiveUnpack zse = new ArchiveUnpack();
+        ArchiveExtract zse = new ArchiveExtract();
         String d = zse.getClass().getCanonicalName() + "." + "Temporary.";
         try (MockedStatic<Files> fMock = Mockito.mockStatic(Files.class)) {
             fMock.when((Verification) Files.createTempDirectory(d, a)).thenThrow(IOException.class);
@@ -226,7 +226,8 @@ class ArchiveUnpackTest {
     }
 
     /**
-     * Test the case where the archive entry contains a directory that does not exist
+     * Test the case where the archive entry contains a directory that does not
+     * exist
      *
      * @throws IOException
      */
@@ -246,18 +247,20 @@ class ArchiveUnpackTest {
                 Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
                 ByteArrayOutputStream archiveEntry = new ByteArrayOutputStream();
                 System.setOut(new PrintStream(archiveEntry));
-                new ArchiveUnpack().processEntry(parent, fileToCreate, entry, tis);
+                new ArchiveExtract().processEntry(parent, fileToCreate, entry, tis);
                 System.setOut(initialOut);
                 assertTrue(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
                 Files.delete(fileToCreate);
                 archiveEntry.close();
-                System.out.println("SUCCESS: Handling of an entry containing a directory that does not exist was tested.");
+                System.out.println(
+                        "SUCCESS: Handling of an entry containing a directory that does not exist was tested.");
                 Files.delete(targetDirectory);
                 break;
             }
-            Files.deleteIfExists(targetDirectory); 
+            Files.deleteIfExists(targetDirectory);
         } catch (IOException e) {
-            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory that does not exist was tested.",
+            System.out.println(String.format(
+                    "FAIL: IOException %s when an entry containing a directory that does not exist was tested.",
                     e.getMessage()));
         }
     }
@@ -285,7 +288,7 @@ class ArchiveUnpackTest {
                 Path parent = fileToCreate.getParent().normalize().toAbsolutePath();
                 ByteArrayOutputStream archiveEntry = new ByteArrayOutputStream();
                 System.setOut(new PrintStream(archiveEntry));
-                new ArchiveUnpack().processEntry(parent, fileToCreate, entry, tis);
+                new ArchiveExtract().processEntry(parent, fileToCreate, entry, tis);
                 System.setOut(initialOut);
                 assertFalse(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
                 Files.delete(fileToCreate);
@@ -299,7 +302,8 @@ class ArchiveUnpackTest {
                 Files.delete(targetDirectory); /// it should be empty at this point, if not the IO Exception will happen
             }
         } catch (IOException e) {
-            System.out.println(String.format("FAIL: IOException %s when an entry containing a directory that already exists was tested.",
+            System.out.println(String.format(
+                    "FAIL: IOException %s when an entry containing a directory that already exists was tested.",
                     e.getMessage()));
         }
     }
@@ -309,62 +313,62 @@ class ArchiveUnpackTest {
      * 
      * @param bais the log
      * @param s    entry being looked for
-     * @return the Path of the unzip directory
+     * @return the Path of the extract directory
      */
     private boolean logContains(ByteArrayOutputStream bais, String s) {
         return bais.toString().contains(s);
     }
 
     /**
-     * Parses the name of the unzip directory from the input string which contains
+     * Parses the name of the extract directory from the input string which contains
      * redirected output from the archive extraction
      * 
      * @param s the outout from the archive extraction
-     * @return the Path of the unzip directory
+     * @return the Path of the extract directory
      */
-    private Path getUnzipDirectory(String s) {
-        String unzipDir = s.substring(s.indexOf("\n") + 1 + "Unzip Target Directory: ".length(),
+    private Path getExtractDirectory(String s) {
+        String extractDir = s.substring(s.indexOf("\n") + 1 + "Extract Target Directory: ".length(),
                 s.indexOf("\n", s.indexOf("\n") + 1));
-        return Paths.get(unzipDir);
+        return Paths.get(extractDir);
     }
 
     /**
-     * Unzips an archive
+     * Extracts an archive
      * 
-     * @oaram a the name of the archive file to unzip
-     * @return a Path to which the archive was unzipped
-     * @throws IOException
+     * @oaram a the name of the archive file to extract
+     * @return a Path to which the archive was extracted
+     * @throws IOException getting the extract directory
      */
-    private Path unzipToPath(String a) throws IOException {
-        Path unzipDir = getUnzipDirectory(unzip(prepForUnzip(a)));
-        assertTrue(Files.exists(unzipDir));
-        return unzipDir;
+    private Path extractToPath(String a) throws IOException {
+        Path extractDir = getExtractDirectory(extract(prepForExtract(a)));
+        assertTrue(Files.exists(extractDir));
+        return extractDir;
     }
 
     /**
-     * Unzip the archive
+     * Extract the archive
      * 
      * @param a the archive
      * @return a string containing the first part of the redirected output (enough
-     *         to parse the name of the directory to which the archive was unzipped)
-     * @throws IOException
+     *         to parse the name of the directory to which the archive was extracted)
+     * @throws IOException during extraction
      */
-    private String unzip(String[] a) throws IOException {
-        ArchiveUnpack.main(a);
+    private String extract(String[] a) throws IOException {
+        ArchiveExtract.main(a);
         System.setOut(initialOut);
         return new String(testOut.toByteArray(), 0,
-                testOut.size() < UNZIP_OUT_LENGTH ? testOut.size() : UNZIP_OUT_LENGTH);
+                testOut.size() < EXTRACT_OUT_LENGTH ? testOut.size() : EXTRACT_OUT_LENGTH);
     }
 
     /**
      * Redirect standard out to another stream so it cam be inspected to gather
-     * information like the name of the directory to which the archive was unzipped
+     * information like the name of the directory to which the archive was extracted
      * and then constructs the arguments to be passed to main
      * 
      * @param a The name of the archive
      * @return a atring array of zero or one element, namely a Path to the archive
      */
-    private String[] prepForUnzip(String a) {
+    private String[] prepForExtract(String a) {
         System.setOut(new PrintStream(testOut));
         if (!a.isEmpty()) {
             Path tgzFile = Paths.get(a).toAbsolutePath();
