@@ -22,7 +22,7 @@ import java.util.Set;
 
 public class ArchiveUnpack {
 
-    public static final String DEFAULT_TGZ_FILENAME = "test.tgz";
+    public static final String DEFAULT_ARCHIVE_FILENAME = "test.tgz";
     private static final Logger logger = LogManager.getLogger("ArchiveUnpack");
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
     private static final int BUFFER_SIZE = 1024;
@@ -39,12 +39,12 @@ public class ArchiveUnpack {
      */
     public static void main(String[] args) throws ArchiveUnpackException, IOException {
         try {
-            String zipFileName = args.length > 0 ? args[0] : DEFAULT_TGZ_FILENAME;
+            String zipFileName = args.length > 0 ? args[0] : DEFAULT_ARCHIVE_FILENAME;
             ArchiveUnpack zse = new ArchiveUnpack();
             logger.info("Zip File: {}", zipFileName);
             Path tempDir = zse.createExtractDir();
             logger.info("Unzip Target Directory: {}", tempDir);
-            zse.unzip(zipFileName, tempDir);
+            zse.extract(zipFileName, tempDir);
         } catch (IOException e) {
             logger.error("Exception {}: {}", e.getClass(), e.getMessage());
             throw e;
@@ -61,7 +61,7 @@ public class ArchiveUnpack {
      * @param t The path in which to unzip the file
      * @throws IOException during IO on a tgz entry
      */
-    private void unzip(String z, Path t) throws IOException {
+    private void extract(String z, Path t) throws IOException {
         if (depth > 5) {
             logger.info("Too many layers of embedded archives were found. Extraction halted");
             return;
@@ -87,7 +87,7 @@ public class ArchiveUnpack {
                 checkForZipSlip(parent, t, name);
                 processEntry(parent, fileToCreate, entry, tis);
             }
-            logger.info("File {} unzipped", z);
+            logger.info("File {} extracted", z);
             depth--;
         }
     }
@@ -119,7 +119,7 @@ public class ArchiveUnpack {
             logger.info("File {} created", f);
             if (isArchive(e.getName())) {
                 logger.info("An embedded archive {} was found", e.getName());
-                unzip(newFile.toString(), newFile.getParent()); // recursion
+                extract(newFile.toString(), newFile.getParent()); // recursion
             }
         }
     }
