@@ -110,7 +110,7 @@ class ArchiveUnpackTest {
     void unzipVariant(String archiveFilename) throws IOException {
         Path unzipDir = unzipToPath(archiveFilename);
         System.out.println(String.format("SUCCESS: Parameterized test with %s. Archive was unzipped to %s",
-                archiveFilename.isEmpty() ? "src/test/resources/".concat(ArchiveUnpack.DEFAULT_TGZ_FILENAME)
+                archiveFilename.isEmpty() ? "src/test/resources/".concat(ArchiveUnpack.DEFAULT_ARCHIVE_FILENAME)
                         : archiveFilename,
                 unzipDir));
     }
