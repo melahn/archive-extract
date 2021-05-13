@@ -1,4 +1,4 @@
-package com.melahn.util.zip;
+package com.melahn.util.extract;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;

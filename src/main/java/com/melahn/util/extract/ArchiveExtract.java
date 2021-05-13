@@ -1,4 +1,4 @@
-package com.melahn.util.zip;
+package com.melahn.util.extract;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;

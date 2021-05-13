@@ -1,4 +1,4 @@
-package com.melahn.util.zip;
+package com.melahn.util.extract;
 
 import java.util.UUID;
 
