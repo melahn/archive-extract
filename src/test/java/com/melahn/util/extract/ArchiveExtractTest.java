@@ -327,7 +327,7 @@ class ArchiveExtractTest {
      * @return the Path of the extract directory
      */
     private Path getExtractDirectory(String s) {
-        String extractDir = s.substring(s.indexOf("\n") + 1 + "Extract Target Directory: ".length(),
+        String extractDir = s.substring(s.indexOf("\n") + 1 + ArchiveExtract.EXTRACT_DIR_OUTPUT_LABEL.length(),
                 s.indexOf("\n", s.indexOf("\n") + 1));
         return Paths.get(extractDir);
     }

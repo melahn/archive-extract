@@ -23,6 +23,8 @@ import java.util.Set;
 public class ArchiveExtract {
 
     public static final String DEFAULT_ARCHIVE_FILENAME = "test.tgz";
+    public static final String EXTRACT_DIR_OUTPUT_LABEL = "Extract Target Directory: ";
+    public static final String EXTRACT_FILE_OUTPUT_LABEL = "Archive File: ";
     private static final Logger logger = LogManager.getLogger("ArchiveExtract");
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
     private static final int BUFFER_SIZE = 1024;
@@ -41,9 +43,9 @@ public class ArchiveExtract {
         try {
             String zipFileName = args.length > 0 ? args[0] : DEFAULT_ARCHIVE_FILENAME;
             ArchiveExtract zse = new ArchiveExtract();
-            logger.info("Zip File: {}", zipFileName);
+            logger.info("{}{}", EXTRACT_FILE_OUTPUT_LABEL, zipFileName);
             Path tempDir = zse.createExtractDir();
-            logger.info("Extract Target Directory: {}", tempDir);
+            logger.info("{}{}", EXTRACT_DIR_OUTPUT_LABEL, tempDir);
             zse.extract(zipFileName, tempDir);
         } catch (IOException e) {
             logger.error("Exception {}: {}", e.getClass(), e.getMessage());
