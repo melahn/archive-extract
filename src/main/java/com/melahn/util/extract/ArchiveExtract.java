@@ -28,7 +28,8 @@ public class ArchiveExtract {
     private static final Logger logger = LogManager.getLogger("ArchiveExtract");
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
     private static final int BUFFER_SIZE = 1024;
-    private int depth = 0;
+    private int depth = 0; // for keeping track of nested archive file depth
+    private boolean halted = false; // of keeping track of when an extract is deliberately halted prematurely
 
     /**
      * Using test.tgz or the name of some other archive supplied in args[0], extract
@@ -36,17 +37,17 @@ public class ArchiveExtract {
      * archives.
      * 
      * @param args optonally args[0] contains the file name of the archive
-     * @throws IOException when IO during extraction
+     * @throws IOException             when IO during extraction
      * @throws ArchiveExtractException if a zip slip exception occcurs
      */
     public static void main(String[] args) throws ArchiveExtractException, IOException {
         try {
-            String zipFileName = args.length > 0 ? args[0] : DEFAULT_ARCHIVE_FILENAME;
-            ArchiveExtract zse = new ArchiveExtract();
-            logger.info("{}{}", EXTRACT_FILE_OUTPUT_LABEL, zipFileName);
-            Path tempDir = zse.createExtractDir();
+            String archiveFileName = args.length > 0 ? args[0] : DEFAULT_ARCHIVE_FILENAME;
+            ArchiveExtract ae = new ArchiveExtract();
+            logger.info("{}{}", EXTRACT_FILE_OUTPUT_LABEL, archiveFileName);
+            Path tempDir = ae.createExtractDir();
             logger.info("{}{}", EXTRACT_DIR_OUTPUT_LABEL, tempDir);
-            zse.extract(zipFileName, tempDir);
+            ae.extract(archiveFileName, tempDir);
         } catch (IOException e) {
             logger.error("Exception {}: {}", e.getClass(), e.getMessage());
             throw e;
@@ -59,17 +60,18 @@ public class ArchiveExtract {
     /**
      * Extract the files in a tgz archive file
      * 
-     * @param z The name of a tgz file
+     * @param a The name of an archive file
      * @param t The path in which to extract the file
-     * @throws IOException during IO on a tgz entry
+     * @throws IOException during IO on an archive entry
      */
-    private void extract(String z, Path t) throws IOException {
+    private void extract(String a, Path t) throws IOException {
         if (depth > 5) {
             logger.info("Too many layers of embedded archives were found. Extraction halted");
+            halted = true;
             return;
         }
         logger.info("Depth = {}", depth++);
-        try (InputStream is = Files.newInputStream(Paths.get(z));
+        try (InputStream is = Files.newInputStream(Paths.get(a));
                 BufferedInputStream bis = new BufferedInputStream(is);
                 GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
                 TarArchiveInputStream tis = new TarArchiveInputStream(gis);) {
@@ -89,7 +91,7 @@ public class ArchiveExtract {
                 checkForZipSlip(parent, t, name);
                 processEntry(parent, fileToCreate, entry, tis);
             }
-            logger.info("File {} extracted", z);
+            logger.info("Archive File {} {}", a, halted? "extraction was halted" : "successfully extracted");
             depth--;
         }
     }
@@ -156,10 +158,16 @@ public class ArchiveExtract {
      */
     protected boolean isHidden(String s) {
         // strip any trailing slash to test for both hidden files and directories
-        String t = s != null && s.endsWith(SEPARATOR) ? s.substring(0, s.length() - 1) : s; 
-        return t != null && !t.contentEquals(".") && !t.contentEquals("..") // not null and not just relative directories 
-                && (t.contains(SEPARATOR) && (t.substring(t.lastIndexOf(SEPARATOR) + 1, t.length())).startsWith(".") // last segment starts with a dot
-                || (!t.contains(SEPARATOR) && t.startsWith("."))); // just a filename with a leading dot
+        String t = s != null && s.endsWith(SEPARATOR) ? s.substring(0, s.length() - 1) : s;
+        return t != null && !t.contentEquals(".") && !t.contentEquals("..") // not null and not just relative
+                                                                            // directories
+                && (t.contains(SEPARATOR) && (t.substring(t.lastIndexOf(SEPARATOR) + 1, t.length())).startsWith(".") // last
+                                                                                                                     // segment
+                                                                                                                     // starts
+                                                                                                                     // with
+                                                                                                                     // a
+                                                                                                                     // dot
+                        || (!t.contains(SEPARATOR) && t.startsWith("."))); // just a filename with a leading dot
     }
 
     /**
@@ -186,7 +194,7 @@ public class ArchiveExtract {
      * @param t the target directory where files from the archive are extracted
      * @param n the name of the file (just used for the exception message, if there
      *          is an exception)
-     * @throws ArchiveExtractException
+     * @throws ArchiveExtractException if a zip slip issue was found
      */
     private void checkForZipSlip(Path p, Path t, String n) throws ArchiveExtractException {
         if (!p.startsWith(t)) {
