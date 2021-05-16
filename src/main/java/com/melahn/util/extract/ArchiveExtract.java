@@ -37,7 +37,7 @@ public class ArchiveExtract {
      * archives.
      * 
      * @param args optonally args[0] contains the file name of the archive
-     * @throws IOException             when IO during extraction
+     * @throws IOException if an IO error occurs during extraction
      * @throws ArchiveExtractException if a zip slip exception occcurs
      */
     public static void main(String[] args) throws ArchiveExtractException, IOException {
