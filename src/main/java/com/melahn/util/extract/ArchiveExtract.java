@@ -36,9 +36,10 @@ public class ArchiveExtract {
      * the archive, checking for the zip slip vulnerability and deeply nested
      * archives.
      * 
-     * @param args optonally args[0] contains the file name of the archive
+     * @param args optionally, args[0] contains the file name of the archive
      * @throws IOException if an IO error occurs during extraction
      * @throws ArchiveExtractException if a zip slip exception occcurs
+     * @throws IllegalArgumentException if an empty archive name is used
      */
     public static void main(String[] args) throws ArchiveExtractException, IOException {
         try {
@@ -63,8 +64,12 @@ public class ArchiveExtract {
      * @param a The name of an archive file
      * @param t The path in which to extract the file
      * @throws IOException during IO on an archive entry
+     * @throws IllegalArgumentException if a is empty or null or t is null
      */
-    private void extract(String a, Path t) throws IOException {
+    public void extract(String a, Path t) throws IOException {
+        if (a == null || a.isEmpty() || t == null ) {
+            throw new IllegalArgumentException();
+        }
         if (depth > 5) {
             logger.info("Too many layers of embedded archives were found. Extraction halted");
             halted = true;
@@ -91,7 +96,7 @@ public class ArchiveExtract {
                 checkForZipSlip(parent, t, name);
                 processEntry(parent, fileToCreate, entry, tis);
             }
-            logger.info("Archive File {} {}", a, halted? "extraction was halted" : "successfully extracted");
+            logger.info("Archive File {} {}", a, halted ? "extraction was halted" : "successfully extracted");
             depth--;
         }
     }
@@ -161,12 +166,8 @@ public class ArchiveExtract {
         String t = s != null && s.endsWith(SEPARATOR) ? s.substring(0, s.length() - 1) : s;
         return t != null && !t.contentEquals(".") && !t.contentEquals("..") // not null and not just relative
                                                                             // directories
-                && (t.contains(SEPARATOR) && (t.substring(t.lastIndexOf(SEPARATOR) + 1, t.length())).startsWith(".") // last
-                                                                                                                     // segment
-                                                                                                                     // starts
-                                                                                                                     // with
-                                                                                                                     // a
-                                                                                                                     // dot
+                && (t.contains(SEPARATOR) && (t.substring(t.lastIndexOf(SEPARATOR) + 1, t.length())).startsWith(".")
+                        // last segment starts with a dot
                         || (!t.contains(SEPARATOR) && t.startsWith("."))); // just a filename with a leading dot
     }
 

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -17,7 +18,9 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Comparator;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -26,6 +29,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -62,9 +66,7 @@ class ArchiveExtractTest {
          */
         try {
             Path testFile = Paths.get(DEFAULT_TEST_FILENAME);
-            if (Files.exists(testFile)) {
-                Files.delete(testFile);
-            }
+            Files.deleteIfExists(testFile);
         } catch (IOException e) {
             System.out.println("Could not cleanup after test cases: ".concat(e.getMessage()));
         }
@@ -113,6 +115,7 @@ class ArchiveExtractTest {
                 archiveFilename.isEmpty() ? "src/test/resources/".concat(ArchiveExtract.DEFAULT_ARCHIVE_FILENAME)
                         : archiveFilename,
                 extractDir));
+        deleteDirectory(extractDir);
     }
 
     /**
@@ -129,6 +132,7 @@ class ArchiveExtractTest {
         System.out.println(String.format(String.format(
                 "SUCCESS: The archive %s contains hidden files. When it was extracted to %s, the hidden files were not extracted.",
                 ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat(".tgz"), extractDir)));
+        deleteDirectory(extractDir);
     }
 
     /**
@@ -145,6 +149,7 @@ class ArchiveExtractTest {
         System.out.println(String.format(
                 String.format("SUCCESS: The archive %s had a depth greater than five, so extraction to %s was halted.",
                         ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"), extractDir)));
+        deleteDirectory(extractDir);
     }
 
     /**
@@ -216,6 +221,7 @@ class ArchiveExtractTest {
                 .asFileAttribute(PosixFilePermissions.fromString("rwxr-----"));
         ArchiveExtract zse = new ArchiveExtract();
         String d = zse.getClass().getCanonicalName() + "." + "Temporary.";
+        System.out.println("Expect an IOException now...");
         try (MockedStatic<Files> fMock = Mockito.mockStatic(Files.class)) {
             fMock.when((Verification) Files.createTempDirectory(d, a)).thenThrow(IOException.class);
             assertThrows(IOException.class, () -> zse.createExtractDir());
@@ -250,11 +256,11 @@ class ArchiveExtractTest {
                 new ArchiveExtract().processEntry(parent, fileToCreate, entry, tis);
                 System.setOut(initialOut);
                 assertTrue(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
-                Files.delete(fileToCreate);
+                Files.deleteIfExists(fileToCreate);
                 archiveEntry.close();
                 System.out.println(
                         "SUCCESS: Handling of an entry containing a directory that does not exist was tested.");
-                Files.delete(targetDirectory);
+                deleteDirectory(targetDirectory);
                 break;
             }
             Files.deleteIfExists(targetDirectory);
@@ -291,21 +297,67 @@ class ArchiveExtractTest {
                 new ArchiveExtract().processEntry(parent, fileToCreate, entry, tis);
                 System.setOut(initialOut);
                 assertFalse(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
-                Files.delete(fileToCreate);
+                Files.deleteIfExists(fileToCreate);
                 archiveEntry.close();
                 System.out.println(
                         "SUCCESS: Handling of an entry containing a directory that already exists was tested.");
-                Files.delete(targetDirectory);
                 break;
             }
-            if (Files.exists(targetDirectory)) {
-                Files.delete(targetDirectory); /// it should be empty at this point, if not the IO Exception will happen
-            }
+            deleteDirectory(targetDirectory);
         } catch (IOException e) {
             System.out.println(String.format(
                     "FAIL: IOException %s when an entry containing a directory that already exists was tested.",
                     e.getMessage()));
         }
+    }
+
+    /**
+     * Test the public API
+     *
+     * @throws IOException
+     */
+    @Test
+    void testAPI() throws IOException {
+        Path targetDirectory = Files.createTempDirectory(this.getClass().getCanonicalName());
+        ByteArrayOutputStream apiTest = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(apiTest));
+        new ArchiveExtract().extract("./src/test/resources/test.tgz", targetDirectory);
+        System.setOut(initialOut);
+        assertTrue(Files.exists(targetDirectory) && Files.isDirectory(targetDirectory)
+                && logContains(apiTest, "Archive File ./src/test/resources/test.tgz successfully extracted"));
+        apiTest.close();
+        deleteDirectory(targetDirectory);
+        System.out.println("SUCCESS: Public API with valid parameterswas tested.");
+    }
+
+    /**
+     * Test the public API with invalid archive arguments
+     * 
+     * @throws IOException
+     */
+    @ParameterizedTest
+    @NullAndEmptySource
+    void testAPIInvalidArchiveArguments(String a) {
+        ArchiveExtract ae = new ArchiveExtract();
+        Path p = Paths.get("foo");
+        assertThrows(IllegalArgumentException.class, () -> {
+            ae.extract(a, p);
+        });
+        System.out.println(String.format("SUCCESS: Parameterized test of the Public API with invalid archive name argument %s was tested.", a == null? "<null>" : "<empty>"));
+    }
+
+        /**
+     * Test the public API with a null target directory arguments
+     * 
+     * @throws IOException
+     */
+    @Test
+    void testAPIInvalidTargetDirectoryArgument() {
+        ArchiveExtract ae = new ArchiveExtract();
+        assertThrows(IllegalArgumentException.class, () -> {
+            ae.extract("foo.tgz", null);
+        });
+        System.out.println("SUCCESS: Public API with null target directory was tested.");
     }
 
     /**
@@ -350,7 +402,8 @@ class ArchiveExtractTest {
      * 
      * @param a the archive
      * @return a string containing the first part of the redirected output (enough
-     *         to parse the name of the directory to which the archive was extracted)
+     *         to parse the name of the directory to which the archive was
+     *         extracted)
      * @throws IOException during extraction
      */
     private String extract(String[] a) throws IOException {
@@ -375,5 +428,20 @@ class ArchiveExtractTest {
             return new String[] { tgzFile.toString() };
         }
         return new String[] {};
+    }
+
+    /**
+     * Deletes a directory, empty or not
+     * 
+     * @param d the directory to delete
+     * @throws IOException if an exception occurs while deleting the directory
+     */
+    private void deleteDirectory(Path d) throws IOException {
+        if (!Files.exists(d)) {
+            return;
+        }
+        try (Stream<Path> walk = Files.walk(d)) {
+            walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+        }
     }
 }
