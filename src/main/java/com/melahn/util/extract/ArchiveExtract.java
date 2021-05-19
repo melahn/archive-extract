@@ -66,7 +66,7 @@ public class ArchiveExtract {
      * @throws IOException during IO on an archive entry
      * @throws IllegalArgumentException if a is empty or null or t is null
      */
-    public void extract(String a, Path t) throws IOException {
+    public void extract(String a, Path t) throws IOException, IllegalArgumentException {
         if (a == null || a.isEmpty() || t == null ) {
             throw new IllegalArgumentException();
         }
