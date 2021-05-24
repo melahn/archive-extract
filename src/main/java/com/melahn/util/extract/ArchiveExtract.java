@@ -14,7 +14,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -27,7 +27,6 @@ public class ArchiveExtract {
     public static final String EXTRACT_FILE_OUTPUT_LABEL = "Archive File: ";
     private static final Logger logger = LogManager.getLogger("ArchiveExtract");
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
-    private static final int BUFFER_SIZE = 1024;
     private int depth = 0; // for keeping track of nested archive file depth
     private boolean halted = false; // of keeping track of when an extract is deliberately halted prematurely
 
@@ -119,12 +118,8 @@ public class ArchiveExtract {
             Files.createDirectory(f);
             logger.info("Directory {} created", f);
         } else if (Files.notExists(f)) { // create a file
-            byte[] data = new byte[BUFFER_SIZE];
             Path newFile = Files.createFile(f);
-            logger.info("File {} created", f);
-            while ((t.read(data, 0, BUFFER_SIZE)) != -1) {
-                Files.write(newFile, data, StandardOpenOption.APPEND);
-            }
+            Files.copy(t,newFile,StandardCopyOption.REPLACE_EXISTING);
             logger.info("File {} created", f);
             if (isArchive(e.getName())) {
                 logger.info("An embedded archive {} was found", e.getName());
