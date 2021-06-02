@@ -255,7 +255,7 @@ class ArchiveExtractTest {
                 System.setOut(new PrintStream(archiveEntry));
                 new ArchiveExtract().processEntry(parent, fileToCreate, entry, tis);
                 System.setOut(initialOut);
-                assertTrue(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
+                assertTrue(Files.exists(fileToCreate));
                 Files.deleteIfExists(fileToCreate);
                 archiveEntry.close();
                 System.out.println(

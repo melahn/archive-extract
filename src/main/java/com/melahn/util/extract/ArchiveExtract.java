@@ -83,7 +83,7 @@ public class ArchiveExtract {
             while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
                 String name = entry.getName();
                 if (isHidden(name)) {
-                    logger.info("Entry {} skipped", name);
+                    logger.debug("Entry {} skipped", name);
                     continue;
                 }
                 // Note the order in which the entries appear is not predictable so it is
@@ -112,17 +112,17 @@ public class ArchiveExtract {
     protected void processEntry(Path p, Path f, TarArchiveEntry e, TarArchiveInputStream t) throws IOException {
         if (Files.notExists(p)) { // first create the parent directory if it does not exist
             Files.createDirectories(p);
-            logger.info("Directory {} created", p);
+            logger.debug("Directory {} created", p);
         }
         if (e.isDirectory() && Files.notExists(f)) { // create a directory
             Files.createDirectory(f);
-            logger.info("Directory {} created", f);
+            logger.debug("Directory {} created", f);
         } else if (Files.notExists(f)) { // create a file
             Path newFile = Files.createFile(f);
             Files.copy(t,newFile,StandardCopyOption.REPLACE_EXISTING);
-            logger.info("File {} created", f);
+            logger.debug("File {} created", f);
             if (isArchive(e.getName())) {
-                logger.info("An embedded archive {} was found", e.getName());
+                logger.debug("An embedded archive {} was found", e.getName());
                 extract(newFile.toString(), newFile.getParent()); // recursion
             }
         }
