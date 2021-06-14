@@ -9,8 +9,8 @@ A project to extract a compressed archive.
 ## Overview
 
 Extracting a compressed archive file is well understand but I wanted a project that would test specifically for the
-the Zip Slip vulnerability described [here](https://github.com/snyk/zip-slip-vulnerability). It is possible for a naive archive extracter to
-unintentionally extract a potentially malicious file without explictly checking for this vulnerability. I also wanted the extractor to protect the user from extracting archives with unusual nesting patterns,  And I wanted it to have 100% Sonar code coverage with no code smells, maintainability issues, security hotspots, etc.
+the Zip Slip vulnerability described [here](https://github.com/snyk/zip-slip-vulnerability). It is possible for a naive archive extractor to
+unintentionally extract a potentially malicious file without explicitly checking for this vulnerability. I also wanted the extractor to protect the user from extracting archives with unusual nesting patterns,  And I wanted it to have 100% Sonar code coverage with no code smells, maintainability issues, security hotspots, etc.
 
 ## Usage
 
