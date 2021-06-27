@@ -107,7 +107,7 @@ class ArchiveExtractTest {
      * @throws IOException
      */
     @ParameterizedTest
-    @ValueSource(strings = { "src/test/resources/test-chart-file-without-embedded-tgz-files.tgz",
+      @ValueSource(strings = { "src/test/resources/test-chart-file-without-embedded-tgz-files.tgz",
             "src/test/resources/test-chart-file-with-embedded-tgz-files.tgz", "" })
     void extractVariant(String archiveFilename) throws IOException {
         Path extractDir = extractToPath(archiveFilename);
@@ -346,7 +346,7 @@ class ArchiveExtractTest {
         System.out.println(String.format("SUCCESS: Parameterized test of the Public API with invalid archive name argument %s was tested.", a == null? "<null>" : "<empty>"));
     }
 
-        /**
+    /**
      * Test the public API with a null target directory arguments
      * 
      * @throws IOException

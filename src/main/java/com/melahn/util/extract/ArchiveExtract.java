@@ -74,7 +74,7 @@ public class ArchiveExtract {
             halted = true;
             return;
         }
-        logger.info("Depth = {}", depth++);
+        logger.debug("Depth = {}", depth++);
         try (InputStream is = Files.newInputStream(Paths.get(a));
                 BufferedInputStream bis = new BufferedInputStream(is);
                 GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
