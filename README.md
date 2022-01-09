@@ -3,8 +3,7 @@
 A project to extract a compressed archive.
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-
-[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=melahn_test-zip)](https://sonarcloud.io/dashboard?id=melahn_test-zip)
+[![Sonar Cloud Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=melahn_java-trace-visualizer&metric=alert_status)](https://sonarcloud.io/dashboard?id=melahn_test-zip)
 
 ## Overview
 
