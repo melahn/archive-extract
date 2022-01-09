@@ -17,7 +17,7 @@ unintentionally extract a potentially malicious file without explicitly checking
 
 To extract a compressed archive, run this command.
 
-     java -jar <compressed archive file name>
+     java -jar <archive-extract jar file name> <compressed archive file name>
 
 ### Command Line Examples
 
