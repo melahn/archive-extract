@@ -67,10 +67,9 @@ To try it out, run this command.
 
 Tested with Maven 3.8.3 though other versions >= 3 should also work.
 
-You will see a warning 
-     
+You will see a warning
      target/classes (Is a directory)
 
-when the shaded jar is built. This warning is due to a long-standing issue where the shade  plugin checks if a classpath element is a jar, and if it is not, swallows useful error information, instead printing out a meaningless warning 'is a directory'.  See https://issues.apache.org/jira/browse/MSHADE-376
+when the shaded jar is built. This warning is due to a long-standing issue where the shade  plugin checks if a classpath element is a jar, and if it is not, swallows useful error information, instead printing out a meaningless warning 'is a directory'.  See <https://issues.apache.org/jira/browse/MSHADE-376>
 
-See https://github.com/melahn/maven-shade-plugin if you want to install your own version of the plugin, with a fix.
+See <https://github.com/melahn/maven-shade-plugin> if you want to install your own version of the plugin, with a fix.
