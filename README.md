@@ -13,6 +13,8 @@ unintentionally extract a potentially malicious file without explicitly checking
 
 ## Usage
 
+Download [archive-extract jar file](resource/jar/archive-extract-1.0.0-SNAPSHOT.jar) or build it from scatch using maven.  Then, run the command line as described below.
+
 ### Command Line
 
 To extract a compressed archive, run this command.
