@@ -52,6 +52,19 @@
     </plugins>
   </reporting>
   <build>
+    <resources>
+      <resource>
+        <!--
+            This is used to extract the project version to derive the name of the shaded jar for integration-tests
+        -->
+        <directory>src/main/resources/resources-filtered</directory>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
@@ -160,16 +173,26 @@
             <configuration>
               <filters>
                 <filter>
-                  <artifact>org.apache.commons:*:*:*</artifact>
+                  <artifact>org.apache.commons:commons-compress</artifact>
                   <excludes>
-                    <exclude>META-INF/MANIFEST.MF</exclude>>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
                   </excludes>
-               </filter>
+                </filter>
                 <filter>
-                 <artifact>org.apache.logging.log4j:*:*:*</artifact>
+                  <artifact>org.apache.logging.log4j:log4j-core</artifact>
                   <excludes>
-                      <exclude>META-INF/MANIFEST.MF</exclude>>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
                   </excludes>
+                  <includes>
+                    <include>**</include>/include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>org.apache.logging.log4j:log4j-api</artifact>
+                  <excludes>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                  </excludes>
+                  <!--includes>**</includes-->
                 </filter>
               </filters>
               <transformers>
@@ -209,6 +232,41 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M5</version>
+        <configuration>
+          <skip>true</skip>
+          <trimStackTrace>false</trimStackTrace>
+        </configuration>
+        <executions>
+          <execution>
+            <id>unit-tests</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <skip>false</skip>
+              <includes>
+                <include>**/*Test.java</include>
+              </includes>
+              <excludes>
+                <exclude>**/*IntegrationTest.java</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>integration-tests</id>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <skip>false</skip>
+              <includes>
+                <include>**/*IntegrationTest.java</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -236,31 +294,31 @@
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.2.0</version>
         <executions>
-            <execution>
-                <id>copy-resources</id>
-                <phase>package</phase>
-                <goals>
-                    <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                    <nonFilteredFileExtensions>
-                        <nonFilteredFileExtension>jar</nonFilteredFileExtension>
-                    </nonFilteredFileExtensions>
-                    <outputDirectory>${basedir}/resource/jar</outputDirectory>
-                    <resources>
-                        <resource>
-                            <directory>${basedir}/target</directory>
-                            <includes>
-                                <include>${project.artifactId}-${project.version}.jar</include>
-                                <include>${project.artifactId}-${project.version}-javadoc.jar</include>
-                                <include>${project.artifactId}-${project.version}-sources.jar</include>
-                            </includes>
-                        </resource>
-                    </resources>
-                </configuration>
-            </execution>
+          <execution>
+            <id>copy-resources</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <nonFilteredFileExtensions>
+                <nonFilteredFileExtension>jar</nonFilteredFileExtension>
+              </nonFilteredFileExtensions>
+              <outputDirectory>${basedir}/resource/jar</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/target</directory>
+                  <includes>
+                    <include>${project.artifactId}-${project.version}.jar</include>
+                    <include>${project.artifactId}-${project.version}-javadoc.jar</include>
+                    <include>${project.artifactId}-${project.version}-sources.jar</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
         </executions>
-    </plugin>
+      </plugin>
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
