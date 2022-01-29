@@ -173,6 +173,12 @@
             <configuration>
               <filters>
                 <filter>
+                  <artifact>com.melahn:archive-extract</artifact>
+                  <excludes>
+                    <exclude>**/resources.properties</exclude>
+                  </excludes>
+                </filter>
+                <filter>
                   <artifact>org.apache.commons:commons-compress</artifact>
                   <excludes>
                     <exclude>META-INF/MANIFEST.MF</exclude>
@@ -273,6 +279,34 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>3.0.0-M5</version>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+            <execution>
+                <phase>validate</phase>
+                <goals>
+                    <goal>create</goal>
+                </goals>
+            </execution>
+        </executions>
+        <configuration>
+            <doCheck>false</doCheck>
+            <!-- 
+                Using doUpdate = true will fail if the repo does not have a 'master' branch such
+                as will occur after the github change.  
+                See https://github.blog/changelog/2020-10-01-the-default-branch-for-newly-created-repositories-is-now-main/
+
+                This is because the plugin uses the following to generate a git log command that is still using 'master'
+                /bin/sh -c cd '/Users/melahn/development/visualstudio/java-trace-visualizer' && 'git' 'log' '-n1' '\-\-date-order' 'master'
+            -->
+            <doUpdate>false</doUpdate>
+            <useLastCommittedRevision>true</useLastCommittedRevision>
+            <scmConnectionUrl>scm:git:https://github.com/melahn/java-trace-visualizer.git</scmConnectionUrl>
+            <shortRevisionLength>10</shortRevisionLength>
+        </configuration>
+    </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
