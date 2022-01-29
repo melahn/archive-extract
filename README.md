@@ -13,7 +13,7 @@ unintentionally extract a potentially malicious file without explicitly checking
 
 ## Usage
 
-Download [archive-extract jar file](resource/jar/archive-extract-1.0.0-SNAPSHOT.jar) or build it from scatch using maven.  Then, run the command line as described below.
+Download the Jar Package from a [GitHub workflow](https://github.com/melahn/archive-extract/actions) and extract the jar from it, or build the jar from scatch using maven.  Then, run the command line as described below.
 
 ### Command Line
 
