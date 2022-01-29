@@ -40,8 +40,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-      - name: Upload Jars
+      - name: mkdir jars && cp target/archive-extract*.jar jars # don't upload the unshaded jar
         uses: actions/upload-artifact@v2
         with:
           name: Jar Package
-          path: resource/jar/*.jar
+          path: jars
