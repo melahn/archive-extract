@@ -22,6 +22,8 @@ import java.util.Comparator;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.melahn.util.test.ArchiveExtractTestUtil;
+
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -40,10 +42,10 @@ class ArchiveExtractTest {
     private final PrintStream initialOut = System.out;
     private final ByteArrayOutputStream testOut = new ByteArrayOutputStream();
     private final static int EXTRACT_OUT_LENGTH = 2048;
-    private final static String DEFAULT_TEST_FILENAME = "test.tgz";
     private final static String DIVIDER = "---------------------------";
     private final static String ARCHIVE_FILE_CONTAINING_HIDDEN_FILES = "src/test/resources/test-with-hidden-files";
     private final static String ARCHIVE_FILE_DEPTH_SIX = "src/test/resources/test-with-depth-six";
+    private final static String TEST_ARCHIVE_FILENAME = "test.tgz";
 
     @BeforeAll
     static void init() {
@@ -52,7 +54,7 @@ class ArchiveExtractTest {
          */
         System.out.println(DIVIDER.concat(" TESTS START ").concat(DIVIDER));
         try {
-            Files.copy(Paths.get("src/test/resources/test.tgz"), Paths.get(DEFAULT_TEST_FILENAME),
+            Files.copy(Paths.get("src/test/resources/test.tgz"), Paths.get(TEST_ARCHIVE_FILENAME),
                     StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             System.out.println("Could not initialize test cases: ".concat(e.getMessage()));
@@ -65,7 +67,7 @@ class ArchiveExtractTest {
          * if the test.tgz file exists in the project directory, then remove it
          */
         try {
-            Path testFile = Paths.get(DEFAULT_TEST_FILENAME);
+            Path testFile = Paths.get(TEST_ARCHIVE_FILENAME);
             Files.deleteIfExists(testFile);
         } catch (IOException e) {
             System.out.println("Could not cleanup after test cases: ".concat(e.getMessage()));
@@ -85,7 +87,8 @@ class ArchiveExtractTest {
         System.setOut(initialOut);
         System.out.println(String
                 .format("SUCCESS: The archive %s was found to have the Zip Slip vulnerability as expected", args[0]));
-    }
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
+   }
 
     /**
      * Test an archive that does not exist
@@ -99,6 +102,7 @@ class ArchiveExtractTest {
         System.setOut(initialOut);
         System.out.println(String.format(String.format(
                 "SUCCESS: A NoSuchFileException was thrown as expected for the non-existent file %s", args[0])));
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
     }
 
     /**
@@ -108,11 +112,11 @@ class ArchiveExtractTest {
      */
     @ParameterizedTest
       @ValueSource(strings = { "src/test/resources/test-chart-file-without-embedded-tgz-files.tgz",
-            "src/test/resources/test-chart-file-with-embedded-tgz-files.tgz", "" })
+            "src/test/resources/test-chart-file-with-embedded-tgz-files.tgz"})
     void extractVariant(String archiveFilename) throws IOException {
         Path extractDir = extractToPath(archiveFilename);
         System.out.println(String.format("SUCCESS: Parameterized test with %s. Archive was extracted to %s",
-                archiveFilename.isEmpty() ? "src/test/resources/".concat(ArchiveExtract.DEFAULT_ARCHIVE_FILENAME)
+                archiveFilename.isEmpty() ? "src/test/resources/".concat(TEST_ARCHIVE_FILENAME)
                         : archiveFilename,
                 extractDir));
         deleteDirectory(extractDir);
@@ -133,6 +137,7 @@ class ArchiveExtractTest {
                 "SUCCESS: The archive %s contains hidden files. When it was extracted to %s, the hidden files were not extracted.",
                 ARCHIVE_FILE_CONTAINING_HIDDEN_FILES.concat(".tgz"), extractDir)));
         deleteDirectory(extractDir);
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
     }
 
     /**
@@ -150,6 +155,7 @@ class ArchiveExtractTest {
                 String.format("SUCCESS: The archive %s had a depth greater than five, so extraction to %s was halted.",
                         ARCHIVE_FILE_DEPTH_SIX.concat(".tgz"), extractDir)));
         deleteDirectory(extractDir);
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
     }
 
     /**
@@ -158,7 +164,7 @@ class ArchiveExtractTest {
     @Test
     void testIsHiddenNull() {
         assertFalse(new ArchiveExtract().isHidden(null));
-        System.out.println("SUCCESS: The null filename was not detected as hidden.");
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
     }
 
     /**
@@ -207,7 +213,7 @@ class ArchiveExtractTest {
     @Test
     void testIsArchiveNull() {
         assertFalse(new ArchiveExtract().isArchive(null));
-        System.out.println(String.format("SUCCESS: Test that a null filename was not detected as an archive"));
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
     }
 
     /**
@@ -228,7 +234,7 @@ class ArchiveExtractTest {
         } finally {
             Files.deleteIfExists(Paths.get(d));
         }
-        System.out.println("SUCCESS: Handling of an IO Exception when creating the extract directory was tested.");
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
     }
 
     /**
@@ -258,8 +264,6 @@ class ArchiveExtractTest {
                 assertTrue(Files.exists(fileToCreate));
                 Files.deleteIfExists(fileToCreate);
                 archiveEntry.close();
-                System.out.println(
-                        "SUCCESS: Handling of an entry containing a directory that does not exist was tested.");
                 deleteDirectory(targetDirectory);
                 break;
             }
@@ -269,6 +273,8 @@ class ArchiveExtractTest {
                     "FAIL: IOException %s when an entry containing a directory that does not exist was tested.",
                     e.getMessage()));
         }
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
+
     }
 
     /**
@@ -296,11 +302,9 @@ class ArchiveExtractTest {
                 System.setOut(new PrintStream(archiveEntry));
                 new ArchiveExtract().processEntry(parent, fileToCreate, entry, tis);
                 System.setOut(initialOut);
-                assertFalse(logContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
+                assertFalse(ArchiveExtractTestUtil.streamContains(archiveEntry, String.format("Directory %s created", fileToCreate)));
                 Files.deleteIfExists(fileToCreate);
                 archiveEntry.close();
-                System.out.println(
-                        "SUCCESS: Handling of an entry containing a directory that already exists was tested.");
                 break;
             }
             deleteDirectory(targetDirectory);
@@ -309,6 +313,29 @@ class ArchiveExtractTest {
                     "FAIL: IOException %s when an entry containing a directory that already exists was tested.",
                     e.getMessage()));
         }
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
+
+    }
+
+    /**
+     * Tests Help and Syntax errors
+     * @throws IOException
+     */
+    @Test
+    void TestHelp() throws IOException {
+        // Test help
+        System.setOut(new PrintStream(testOut));
+        ArchiveExtract.main(new String[0]);
+        assertTrue(ArchiveExtractTestUtil.streamContains(testOut, ArchiveExtract.HELP_MESSAGE));
+        System.setOut(initialOut);
+        System.out.println("Help output is correct");
+        // Test too many parameters
+        System.setOut(new PrintStream(testOut));
+        ArchiveExtract.main(new String[2]);
+        assertTrue(ArchiveExtractTestUtil.streamContains(testOut, ArchiveExtract.TOO_MANY_PARAMETERS_MESSAGE));
+        System.setOut(initialOut);
+        System.out.println("Too many parameeters output is correct");
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
     }
 
     /**
@@ -324,10 +351,10 @@ class ArchiveExtractTest {
         new ArchiveExtract().extract("./src/test/resources/test.tgz", targetDirectory);
         System.setOut(initialOut);
         assertTrue(Files.exists(targetDirectory) && Files.isDirectory(targetDirectory)
-                && logContains(apiTest, "Archive File ./src/test/resources/test.tgz successfully extracted"));
+                && ArchiveExtractTestUtil.streamContains(apiTest, "Archive File ./src/test/resources/test.tgz successfully extracted"));
         apiTest.close();
         deleteDirectory(targetDirectory);
-        System.out.println("SUCCESS: Public API with valid parameterswas tested.");
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
     }
 
     /**
@@ -357,18 +384,7 @@ class ArchiveExtractTest {
         assertThrows(IllegalArgumentException.class, () -> {
             ae.extract("foo.tgz", null);
         });
-        System.out.println("SUCCESS: Public API with null target directory was tested.");
-    }
-
-    /**
-     * Answers true if the log contains a particular entry
-     * 
-     * @param bais the log
-     * @param s    entry being looked for
-     * @return the Path of the extract directory
-     */
-    private boolean logContains(ByteArrayOutputStream bais, String s) {
-        return bais.toString().contains(s);
+        System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
     }
 
     /**

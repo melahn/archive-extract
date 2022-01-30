@@ -22,10 +22,12 @@ import java.util.Set;
 
 public class ArchiveExtract {
 
-    public static final String DEFAULT_ARCHIVE_FILENAME = "test.tgz";
     public static final String EXTRACT_DIR_OUTPUT_LABEL = "Extract Target Directory: ";
     public static final String EXTRACT_FILE_OUTPUT_LABEL = "Archive File: ";
-    private static final Logger logger = LogManager.getLogger("ArchiveExtract");
+    public static final String HELP_SYNTAX_MESSAGE = "Syntax:\n\tjava -jar <archive-extract-jar file> <file-to-extract>";
+    public static final String HELP_MESSAGE = "Extracts a compressed archive".concat("\n").concat(HELP_SYNTAX_MESSAGE);
+    public static final String TOO_MANY_PARAMETERS_MESSAGE = "Too many parameters".concat("\n").concat(HELP_SYNTAX_MESSAGE);
+    private static final Logger LOGGER = LogManager.getLogger("ArchiveExtract");
     private static final String SEPARATOR = FileSystems.getDefault().getSeparator();
     private int depth = 0; // for keeping track of nested archive file depth
     private boolean halted = false; // of keeping track of when an extract is deliberately halted prematurely
@@ -42,17 +44,21 @@ public class ArchiveExtract {
      */
     public static void main(String[] args) throws ArchiveExtractException, IOException {
         try {
-            String archiveFileName = args.length > 0 ? args[0] : DEFAULT_ARCHIVE_FILENAME;
+            if (args.length != 1) {
+                LOGGER.info("{}", args.length > 1 ? TOO_MANY_PARAMETERS_MESSAGE : HELP_MESSAGE);
+                return;
+            }
+            String archiveFileName = args[0];
             ArchiveExtract ae = new ArchiveExtract();
-            logger.info("{}{}", EXTRACT_FILE_OUTPUT_LABEL, archiveFileName);
+            LOGGER.info("{}{}", EXTRACT_FILE_OUTPUT_LABEL, archiveFileName);
             Path tempDir = ae.createExtractDir();
-            logger.info("{}{}", EXTRACT_DIR_OUTPUT_LABEL, tempDir);
+            LOGGER.info("{}{}", EXTRACT_DIR_OUTPUT_LABEL, tempDir);
             ae.extract(archiveFileName, tempDir);
         } catch (IOException e) {
-            logger.error("Exception {}: {}", e.getClass(), e.getMessage());
+            LOGGER.error("Exception {}: {}", e.getClass(), e.getMessage());
             throw e;
         } catch (ArchiveExtractException e) {
-            logger.error("{}: {}", e.getClass().getName(), e.getMessage());
+            LOGGER.error("{}: {}", e.getClass().getName(), e.getMessage());
             throw e;
         }
     }
@@ -70,11 +76,11 @@ public class ArchiveExtract {
             throw new IllegalArgumentException();
         }
         if (depth > 5) {
-            logger.info("Too many layers of embedded archives were found. Extraction halted");
+            LOGGER.info("Too many layers of embedded archives were found. Extraction halted");
             halted = true;
             return;
         }
-        logger.debug("Depth = {}", depth++);
+        LOGGER.debug("Depth = {}", depth++);
         try (InputStream is = Files.newInputStream(Paths.get(a));
                 BufferedInputStream bis = new BufferedInputStream(is);
                 GzipCompressorInputStream gis = new GzipCompressorInputStream(bis);
@@ -83,7 +89,7 @@ public class ArchiveExtract {
             while ((entry = (TarArchiveEntry) tis.getNextEntry()) != null) {
                 String name = entry.getName();
                 if (isHidden(name)) {
-                    logger.debug("Entry {} skipped", name);
+                    LOGGER.debug("Entry {} skipped", name);
                     continue;
                 }
                 // Note the order in which the entries appear is not predictable so it is
@@ -95,7 +101,7 @@ public class ArchiveExtract {
                 checkForZipSlip(parent, t, name);
                 processEntry(parent, fileToCreate, entry, tis);
             }
-            logger.info("Archive File {} {}", a, halted ? "extraction was halted" : "successfully extracted");
+            LOGGER.info("Archive File {} {}", a, halted ? "extraction was halted" : "successfully extracted");
             depth--;
         }
     }
@@ -112,17 +118,17 @@ public class ArchiveExtract {
     protected void processEntry(Path p, Path f, TarArchiveEntry e, TarArchiveInputStream t) throws IOException {
         if (Files.notExists(p)) { // first create the parent directory if it does not exist
             Files.createDirectories(p);
-            logger.debug("Directory {} created", p);
+            LOGGER.debug("Directory {} created", p);
         }
         if (e.isDirectory() && Files.notExists(f)) { // create a directory
             Files.createDirectory(f);
-            logger.debug("Directory {} created", f);
+            LOGGER.debug("Directory {} created", f);
         } else if (Files.notExists(f)) { // create a file
             Path newFile = Files.createFile(f);
             Files.copy(t,newFile,StandardCopyOption.REPLACE_EXISTING);
-            logger.debug("File {} created", f);
+            LOGGER.debug("File {} created", f);
             if (isArchive(e.getName())) {
-                logger.debug("An embedded archive {} was found", e.getName());
+                LOGGER.debug("An embedded archive {} was found", e.getName());
                 extract(newFile.toString(), newFile.getParent()); // recursion
             }
         }
@@ -145,7 +151,7 @@ public class ArchiveExtract {
             }
             return p;
         } catch (IOException e) {
-            logger.error("IO Exception creating directory {}", t);
+            LOGGER.error("IO Exception creating directory {}", t);
             throw e;
         }
     }
