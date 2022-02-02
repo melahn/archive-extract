@@ -198,7 +198,6 @@
                   <excludes>
                     <exclude>META-INF/MANIFEST.MF</exclude>
                   </excludes>
-                  <!--includes>**</includes-->
                 </filter>
               </filters>
               <transformers>
