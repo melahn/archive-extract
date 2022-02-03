@@ -27,7 +27,7 @@ To extract a compressed archive, run this command.
 
 Benign archives that don't contain any known vulnerabilities are included in the project.  To try one of them out, run this command.
 
-     java -jar target/archive-extract-1.0.0-SNAPSHOT.jar src/test/resources/test.tgz
+     java -jar target/archive-extract-1.0.0.jar src/test/resources/test.tgz
 
 #### Unsafe Archives
 
@@ -40,7 +40,7 @@ This project contains code that extracts a tgz archive, checks for this vulnerab
 
 To try it out, run this command.
 
-    java -jar target/archive-extract-1.0.0-SNAPSHOT.jar src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz
+    java -jar target/archive-extract-1.0.0.jar src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz
 
 ##### Nested Archive
 
@@ -49,7 +49,7 @@ in this project stops extracting when it finds itself more than five levels deep
 
 To try it out, run this command.
 
-    java -jar target/archive-extract-1.0.0-SNAPSHOT.jar src/test/resources/test-with-depth-six.tgz
+    java -jar target/archive-extract-1.0.0.jar src/test/resources/test-with-depth-six.tgz
 
 ### Java API
 
