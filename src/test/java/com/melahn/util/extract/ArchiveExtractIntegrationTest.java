@@ -62,7 +62,7 @@ class ArchiveExtractIntegrationTest {
         } catch (IOException e) {
             System.out.println("Could not cleanup after test cases: ".concat(e.getMessage()));
         }
-        System.out.println(DIVIDER.concat(" TESTS END ").concat(DIVIDER));
+        System.out.println(DIVIDER.concat(" INTEGRATION TESTS END ").concat(DIVIDER));
     }
 
     /*

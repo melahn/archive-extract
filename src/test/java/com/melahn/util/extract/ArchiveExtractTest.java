@@ -52,7 +52,7 @@ class ArchiveExtractTest {
         /**
          * copy the test.tgz file to the project root to prep for the no parms case
          */
-        System.out.println(DIVIDER.concat(" TESTS START ").concat(DIVIDER));
+        System.out.println(DIVIDER.concat(" UNIT TESTS START ").concat(DIVIDER));
         try {
             Files.copy(Paths.get("src/test/resources/test.tgz"), Paths.get(TEST_ARCHIVE_FILENAME),
                     StandardCopyOption.REPLACE_EXISTING);
@@ -72,7 +72,7 @@ class ArchiveExtractTest {
         } catch (IOException e) {
             System.out.println("Could not cleanup after test cases: ".concat(e.getMessage()));
         }
-        System.out.println(DIVIDER.concat(" TESTS END ").concat(DIVIDER));
+        System.out.println(DIVIDER.concat(" UNIT TESTS END ").concat(DIVIDER));
     }
 
     /**
