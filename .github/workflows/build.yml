@@ -16,40 +16,50 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0  
+      # Setup Java 11 with a settings.xml file setup for deployment, including signatures
+      # Note: maven caching is done here
       - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
           java-version: 11
+          cache: 'maven'
+          server-id: github
+          server-username: MAVEN_USERNAME 
+          server-password: MAVEN_PASSWORD 
+          gpg-private-key: ${{ secrets.GPG_JAR_KEY }} 
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      # Cache Sonar packages
       - name: Cache SonarCloud packages
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-      - name: Cache Maven packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-      - name: Install gpg secret key
-        run: |
-          cat <(echo -e "${{ secrets.GPG_JAR_KEY }}") | gpg --batch --import
-          gpg --list-secret-keys --keyid-format LONG
-      - name: Verify
-        run: mvn -X -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSWORD }} verify
-      - name: Update Sonar Cloud
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-      - name: Package Jars and signatures
+      # Build it
+      - name: Build
+        run: mvn -X -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSPHRASE }} verify
+        env: 
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_JAR_PASSWORD }}
+      # Copy the jars and signature files 
+      - name: Package Jars and Signatures
         run: |
           mkdir jars && cp target/archive-extract*.jar jars 
           cp target/*.asc jars 
+      # Upload the jars and signature files 
       - uses: actions/upload-artifact@v2
         with:
           name: Jar and Signature Package
           path: jars
+      # Run the sonar plugin to update Sonar content
+      #- name: Update Sonar Cloud
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+      #    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #  run: |
+      #    mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+
+
