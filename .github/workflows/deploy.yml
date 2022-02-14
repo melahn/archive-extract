@@ -65,7 +65,7 @@ jobs:
       #  env:
       #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #    MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-      #    MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+      #    MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
       #    MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_JAR_PASSWORD }}
 
 
