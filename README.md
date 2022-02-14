@@ -4,6 +4,7 @@ A project to extract a compressed archive.
 
 ![version](https://img.shields.io/badge/version-1.0.0-black)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Build](https://github.com/melahn/experimentcicd/actions/workflows/build.yml/badge.svg)](https://github.com/melahn/archive-extract/actions/workflows/build.yml)
 [![Sonar Cloud Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=melahn_java-trace-visualizer&metric=alert_status)](https://sonarcloud.io/dashboard?id=melahn_test-zip)
 
 **Note**: Release 1.0.0 in progress
