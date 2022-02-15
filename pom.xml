@@ -184,7 +184,7 @@
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.2.4</version>
         <configuration>
-          <minimizeJar>true</minimizeJar>
+          <minimizeJar>false</minimizeJar>
           <filters>
             <filter>
               <artifact>*:*</artifact>
@@ -211,23 +211,35 @@
                     <exclude>**/resources.properties</exclude>
                   </excludes>
                 </filter>
-                <filter>
-                  <artifact>org.apache.commons:commons-compress</artifact>
+                <!--
+                    filter out any duplicate manifests
+                -->
+                 <filter>
+                  <artifact>commons-io:*</artifact>
                   <excludes>
                     <exclude>META-INF/MANIFEST.MF</exclude>
                   </excludes>
                 </filter>
                 <filter>
-                  <artifact>org.apache.logging.log4j:log4j-core</artifact>
+                  <artifact>org.apache.*:*</artifact>
                   <excludes>
                     <exclude>META-INF/MANIFEST.MF</exclude>
                   </excludes>
-                  <includes>
-                    <include>**</include>/include>
-                  </includes>
+                </filter>
+                   <filter>
+                  <artifact>org.codehaus.plexus:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                  </excludes>
                 </filter>
                 <filter>
-                  <artifact>org.apache.logging.log4j:log4j-api</artifact>
+                  <artifact>org.slf4j:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                  </excludes>
+                </filter>
+                <filter>
+                  <artifact>org.sonatype.*:*</artifact>
                   <excludes>
                     <exclude>META-INF/MANIFEST.MF</exclude>
                   </excludes>
