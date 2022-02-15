@@ -66,17 +66,26 @@ class ArchiveExtractIntegrationTest {
     }
 
     /*
-     * Tests the no error, normal case in the shaded jar.
+     * Tests the no error, normal case in the shaded jar.  The main purpose of this
+     * test is to prove the shaded is executable, as there are cases where a shaded
+     * jar can be corrupted, such as when expected log4j components are not found.
      * 
      * @throws InterruptedException
      * @throws IOException
      */
     @Test
-    void normalTest() throws InterruptedException, IOException {
+    void shadedJarTest() throws InterruptedException, IOException {
+        // test a normal extract
         args.add(TARGET_TEST_FILE_PATH.toAbsolutePath().toString());
         int exitValue = utility.createProcess(args, new String[][] { new String[] {}, new String[] {} }, null, JaCocoAgentString,
                 className, targetTestPath, logFilePath);
         assertEquals(0, exitValue);
+        assertTrue(ArchiveExtractTestUtil.fileContains(logFilePath, "Archive File ".concat(TARGET_TEST_FILE_PATH.toAbsolutePath().toString().concat(" successfully extracted"))));
+        // test help is shown when no archive parameter is provided
+        exitValue = utility.createProcess(new ArrayList<String>(), new String[][] { new String[] {}, new String[] {} }, null, JaCocoAgentString,
+                className, targetTestPath, logFilePath);
+        assertEquals(0, exitValue);
+        assertTrue(ArchiveExtractTestUtil.fileContains(logFilePath, "Extracts a compressed archive"));
         System.out.println(new Throwable().getStackTrace()[0].getMethodName().concat(" completed"));
     }
 }
