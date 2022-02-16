@@ -184,7 +184,7 @@
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.2.4</version>
         <configuration>
-          <minimizeJar>false</minimizeJar>
+          <minimizeJar>true</minimizeJar>
           <filters>
             <filter>
               <artifact>*:*</artifact>
@@ -205,11 +205,32 @@
             </goals>
             <configuration>
               <filters>
+                <!--
+                    filter out the resources.properties because it is 
+                    only needed to conpute the name of the shaded jar
+                    for running tests
+                -->
                 <filter>
                   <artifact>com.melahn:archive-extract</artifact>
                   <excludes>
                     <exclude>**/resources.properties</exclude>
                   </excludes>
+                </filter>
+                <!--
+                    explictly include all the log4j elements to
+                    avoid the 'ERROR StatusLogger Unrecognized format specifier'
+                    error which occurs because the minimize jar option cannot
+                    understand all the elements needed when computing the transitive 
+                    hull in particular, non-classfile elements
+                -->
+                <filter>
+                  <artifact>org.apache.logging.log4j:log4j-core</artifact>
+                  <excludes>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                  </excludes>
+                  <includes>
+                    <include>**</include>
+                  </includes>
                 </filter>
                 <!--
                     filter out any duplicate manifests
