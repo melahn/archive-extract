@@ -1,4 +1,8 @@
-name: Build
+# This workflow will build the project and upload the jar files to
+# GitHub as build artifacts.
+#
+# For deploying a package to the maven central
+# repository and as a GitHub Package, use its sibling, deploy.yml.
 on:
   push:
     branches:
