@@ -12,4 +12,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 - Supports secure extraction of the content of a compressed archive
 - 100% Sonar Cloud tested code coverage
+- Deployment to both GitHub Packages and to the Maven Central Repository
   
