@@ -11,7 +11,7 @@ on:
       tags:
         description: 'Deployment to GitHub and Maven Central Repository'
 jobs:
-  build:
+  publish:
     name: Publish 
     runs-on: ubuntu-latest
     # Permissions are needed to read the artifacts and write the package
@@ -23,17 +23,32 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  
-      # Setup Java 11 with a settings.xml file setup for signatures and deployment
-      # Note: maven caching is done here
+      # Setup Java 11 for publish to the Maven Central Repository
       - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
           java-version: 11
-          cache: 'maven'
           server-id: ossrh
           server-username: MAVEN_USERNAME 
           server-password: MAVEN_PASSWORD 
+          gpg-private-key: ${{ secrets.GPG_JAR_KEY }} 
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      # Deploy to the Maven Central Repository
+      - name: Deploy to the Maven Central Repository
+        run: | 
+          mvn -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSWORD }} -P ossrh deploy 
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_JAR_PASSWORD }}
+      # Setup Java 11 this time for publish to GitHub Packages
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: 11
+          server-id: github
           gpg-private-key: ${{ secrets.GPG_JAR_KEY }} 
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
       # Deploy to GitHub packages
@@ -42,13 +57,4 @@ jobs:
           mvn -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSWORD }} -P github deploy 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_JAR_PASSWORD }}
-      # Deploy to the Maven Central Repository
-      - name: Deploy to the Maven Central Repository
-        run: | 
-          mvn -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSWORD }} -P ossrh deploy 
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_JAR_PASSWORD }}
