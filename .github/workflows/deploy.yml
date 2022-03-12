@@ -42,11 +42,11 @@ jobs:
         run: |
           cat /home/runner/.m2/settings.xml
       # Deploy to the Maven Central Repository
-      #- name: Deploy to the Maven Central Repository
-      #  run: | 
-      #    mvn -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSWORD }} -P ossrh deploy 
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #    MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-      #    MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-      #    MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_JAR_PASSWORD }}
+      - name: Deploy to the Maven Central Repository
+        run: | 
+          mvn -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSWORD }} -P ossrh deploy 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_JAR_PASSWORD }}
