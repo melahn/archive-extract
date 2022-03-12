@@ -28,6 +28,7 @@
     </developer>
   </developers>
   <properties>
+    <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <sonar.projectKey>melahn_test-zip</sonar.projectKey>
     <sonar.organization>melahn</sonar.organization>
@@ -53,12 +54,39 @@
   </reporting>
   <profiles>
     <!-- 
-      This profile is used to deploy to GitHub Packages
+      This default profile is used when building outside of 
+      GitHub actions, such as on the command line.
+
+      It sets builder.id and build.timestamp, useful in a manifest.
+
+      Deployment should only be done using GitHub 
+      CI/CD so no distributionManagement section
+      is defined.
+    -->
+    <profile>
+      <id>local</id>
+      <properties>
+        <builder.id>${user.name}</builder.id>
+      </properties>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+    </profile>
+    <!-- 
+      This profile is used with a GitHub Action.
+
+      It sets builder.id, useful in a MANIFEST.
+
+      It also sets up the repository to be
+      used for a deploy to GitHub Packages.
     -->
     <profile>
       <id>github</id>
+      <properties>
+        <builder.id>${env.GITHUB_ACTOR}</builder.id>
+      </properties>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <activeByDefault>false</activeByDefault>
       </activation>
       <distributionManagement>
         <repository>
@@ -69,10 +97,19 @@
       </distributionManagement>
     </profile>
     <!-- 
-      This profile is used to deploy to the Maven Central Repository
+      This profile is used with a GitHub Action.
+
+      It sets builder.id, useful in a MANIFEST.
+
+      It also sets up the repository to be
+      used for a deploy to the Maven Central
+      Repository.
     -->
     <profile>
       <id>ossrh</id>
+      <properties>
+        <builder.id>${env.GITHUB_ACTOR}</builder.id>
+      </properties>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
@@ -271,7 +308,8 @@
                   <manifestEntries>
                     <Main-Class>com.melahn.util.extract.ArchiveExtract</Main-Class>
                     <Multi-Release>true</Multi-Release>
-                    <Build-Number>${buildNumber}</Build-Number>
+                    <Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
+                    <Builder-Id>${builder.id}</Builder-Id>
                   </manifestEntries>
                 </transformer>
                 <!--
