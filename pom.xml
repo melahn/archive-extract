@@ -156,7 +156,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.3.1</version>
+        <version>3.3.2</version>
         <configuration>
           <source>8</source>
           <!--needed if using jdk 11.0.8 -->
@@ -383,37 +383,9 @@
         <version>3.0.0-M5</version>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>buildnumber-maven-plugin</artifactId>
-        <version>1.4</version>
-        <executions>
-            <execution>
-                <phase>validate</phase>
-                <goals>
-                    <goal>create</goal>
-                </goals>
-            </execution>
-        </executions>
-        <configuration>
-            <doCheck>false</doCheck>
-            <!-- 
-                Using doUpdate = true will fail if the repo does not have a 'master' branch such
-                as will occur after the github change.  
-                See https://github.blog/changelog/2020-10-01-the-default-branch-for-newly-created-repositories-is-now-main/
-
-                This is because the plugin uses the following to generate a git log command that is still using 'master'
-                /bin/sh -c cd '/Users/melahn/development/visualstudio/java-trace-visualizer' && 'git' 'log' '-n1' '\-\-date-order' 'master'
-            -->
-            <doUpdate>false</doUpdate>
-            <useLastCommittedRevision>true</useLastCommittedRevision>
-            <scmConnectionUrl>scm:git:https://github.com/melahn/java-trace-visualizer.git</scmConnectionUrl>
-            <shortRevisionLength>10</shortRevisionLength>
-        </configuration>
-    </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.9.0</version>
+        <version>3.10.1</version>
         <configuration>
           <release>8</release>
           <showDeprecation>true</showDeprecation>
@@ -489,13 +461,13 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
-      <version>2.17.1</version>
+      <version>2.17.2</version>
     </dependency>
     <dependency>
       <!-- needed for static method mocking -->
       <groupId>org.mockito</groupId>
       <artifactId>mockito-inline</artifactId>
-      <version>4.3.1</version>
+      <version>4.4.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
