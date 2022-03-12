@@ -8,8 +8,6 @@ A project to extract a compressed archive.
 [![Deploy](https://github.com/melahn/test-zip-slip/actions/workflows/deploy.yml/badge.svg)](https://github.com/melahn/archive-extract/actions/workflows/deploy.yml)
 [![Sonar Cloud Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=melahn_java-trace-visualizer&metric=alert_status)](https://sonarcloud.io/dashboard?id=melahn_test-zip)
 
-**Note**: Release 1.0.0 in progress
-
 ## Overview
 
 Extracting a compressed archive file is well understood but I wanted a project that would test specifically for 
