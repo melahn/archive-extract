@@ -1,7 +1,9 @@
 # This workflow will deploy a package to both GitHub Packages and to the Maven 
-# Central Repository. Though it could be setup to be triggered on a GitHub release 
-# create, for now it is instead started without a trigger. When I am satisfied the 
-# artifacts are being correctly signed and published I will add a trigger.
+# Central Repository. 
+# 
+# Though it could be setup to be triggered on a GitHub release 
+# create, for now it is instead started manually. When I am satisfied the 
+# artifacts are being correctly signed and published I may add a trigger.
 name: Deploy
 on:
   workflow_dispatch:
@@ -17,47 +19,28 @@ jobs:
       contents: read
       packages: write 
     steps:
+      # Checkout (using V2)
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0  
+      # Setup Java 11 with a settings.xml file setup for signatures and deployment
+      # Note: maven caching is done here
       - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
           java-version: 11
           cache: 'maven'
-          server-id: github
+          server-id: ossrh
+          server-username: MAVEN_USERNAME 
+          server-password: MAVEN_PASSWORD 
           gpg-private-key: ${{ secrets.GPG_JAR_KEY }} 
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
-      # Dump the generated settings file so I can be sure the credentials 
-      # are being used in the right way, and not visible
+      # Dump the generated settings file just so I can be sure the credentials 
+      # are being used in the right way, and are not visible
       - name: Dump Settings
         run: |
           cat /home/runner/.m2/settings.xml
-      # Deploy to GitHub packages
-      - name: Deploy to GitHub Packages
-        run: | 
-          mvn -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSWORD }} -P github deploy 
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_JAR_PASSWORD }}
-      # Deploy to the Maven Central Repository
-      #- name: Set up JDK 11
-      #  uses: actions/setup-java@v2
-      #  with:
-      #    distribution: 'zulu'
-      #    java-version: 11
-      #    cache: 'maven'
-      #    server-id: ossrh
-      #    server-username: MAVEN_USERNAME 
-      #    server-password: MAVEN_PASSWORD 
-      #    gpg-private-key: ${{ secrets.GPG_JAR_KEY }} 
-      #    gpg-passphrase: MAVEN_GPG_PASSPHRASE
-      # Dump the generated settings file so I can be sure the credentials 
-      # are being used in the right way, and not visible
-      #- name: Dump Settings
-      #  run: |
-      #    cat /home/runner/.m2/settings.xml
       # Deploy to the Maven Central Repository
       #- name: Deploy to the Maven Central Repository
       #  run: | 
@@ -67,5 +50,3 @@ jobs:
       #    MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
       #    MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
       #    MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_JAR_PASSWORD }}
-
-
