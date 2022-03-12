@@ -36,11 +36,6 @@ jobs:
           server-password: MAVEN_PASSWORD 
           gpg-private-key: ${{ secrets.GPG_JAR_KEY }} 
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
-      # Dump the generated settings file just so I can be sure the credentials 
-      # are being used in the right way, and are not visible
-      - name: Dump Settings
-        run: |
-          cat /home/runner/.m2/settings.xml
       # Deploy to the Maven Central Repository
       - name: Deploy to the Maven Central Repository
         run: | 
