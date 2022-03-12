@@ -36,6 +36,13 @@ jobs:
           server-password: MAVEN_PASSWORD 
           gpg-private-key: ${{ secrets.GPG_JAR_KEY }} 
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      # Deploy to GitHub packages
+      - name: Deploy to GitHub Packages
+        run: | 
+          mvn -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSWORD }} -P github deploy 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_JAR_PASSWORD }}
       # Deploy to the Maven Central Repository
       - name: Deploy to the Maven Central Repository
         run: | 
