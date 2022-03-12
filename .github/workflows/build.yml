@@ -41,9 +41,9 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-      # Run the Verify Phase
+      # Run the Verify Phase using the github profile
       - name: Verify
-        run: mvn -X -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSPHRASE }} verify
+        run: mvn -X -B -Dgpg.passphrase=${{ secrets.GPG_JAR_PASSPHRASE }} -P github verify
         env: 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
