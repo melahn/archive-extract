@@ -10,19 +10,33 @@ A project to extract a compressed archive.
 
 ## Overview
 
-Extracting a compressed archive file is well understood but I wanted a project that would test specifically for 
+Extracting a compressed archive file is well understood but I wanted a project that would test specifically for
 the *Zip Slip Vulnerability* described [here](https://github.com/snyk/zip-slip-vulnerability). It is possible for a naive archive extractor to
 unintentionally extract a potentially malicious file without explicitly checking for this vulnerability. I also wanted the extractor to protect the user from extracting archives with unusual nesting patterns. And I wanted it to have 100% Sonar code coverage with no code smells, maintainability issues, security hotspots, etc.
 
+## Dependency Info
+
+Available from the [Maven Central Repository](https://search.maven.org/search?q=melahn) and from [GitHub Packages](https://github.com/melahn/archive-extract/packages)
+
+```xml
+<dependency>
+  <groupId>com.melahn</groupId>
+  <artifactId>archive-extract</artifactId>
+  <version>1.0.0</version>
+</dependency>
+```
+
 ## Usage
 
-Download the Jar Package from a [GitHub workflow](https://github.com/melahn/archive-extract/actions) and extract the jar from it, or build the jar from scatch using maven.  Then, run the command line as described below.
+Download the Jar Package from a [GitHub workflow](https://github.com/melahn/archive-extract/actions) and extract the jar from it, or build the jar using mvn install.  Then, run the command line as described below.
 
 ### Command Line
 
 To extract a compressed archive, run this command.
 
+```bash
      java -jar <archive-extract jar file name> <compressed archive file name>
+```
 
 ### Command Line Examples
 
@@ -30,7 +44,9 @@ To extract a compressed archive, run this command.
 
 Benign archives that don't contain any known vulnerabilities are included in the project.  To try one of them out, run this command.
 
+```bash
      java -jar target/archive-extract-1.0.0.jar src/test/resources/test.tgz
+```
 
 #### Unsafe Archives
 
@@ -43,7 +59,9 @@ This project contains code that extracts a tgz archive, checks for this vulnerab
 
 To try it out, run this command.
 
+```bash
     java -jar target/archive-extract-1.0.0.jar src/test/resources/test-chart-file-with-zip-slip-vulnerability.tgz
+```
 
 ##### Nested Archive
 
@@ -52,14 +70,19 @@ in this project stops extracting when it finds itself more than five levels deep
 
 To try it out, run this command.
 
+```bash
     java -jar target/archive-extract-1.0.0.jar src/test/resources/test-with-depth-six.tgz
+```
 
 ### Java API
 
+```java
      public void extract(String archiveName, Path targetDirectory) throws IOException, IllegalArgumentException
+```
 
 ### Java API Example
 
+```java
      public class ArchiveExtractExample {
           public static void main (String args[]) throws java.io.IOException {
                String archive = "src/test/resources/test.tgz";
@@ -67,6 +90,7 @@ To try it out, run this command.
                new com.melahn.util.extract.ArchiveExtract().extract(archive, targetDirectory);
           }
      }
+```
 
 ## Build Notes
 
@@ -74,7 +98,9 @@ Tested with Maven 3.8.3 though other versions >= 3 should also work.
 
 You will see a warning
 
+```text
      target/classes (Is a directory)
+```
 
 when the shaded jar is built. This warning is due to a long-standing issue where the shade plugin checks if a classpath element is a jar, and if it is not, swallows useful error information, instead printing out a meaningless warning '(Is a directory)'.  See <https://issues.apache.org/jira/browse/MSHADE-376>
 
