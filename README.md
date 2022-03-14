@@ -92,9 +92,13 @@ To try it out, run this command.
      }
 ```
 
-## Build Notes
+## Build and CI/CD Notes
 
-Tested with Maven 3.8.3 though other versions >= 3 should also work.  
+The artifact is published to both the Maven Central Repository and as a GitHub Package using the [Deploy GitHub Workflow](https://github.com/melahn/archive-extract/blob/main/.github/workflows/deploy.yml).
+
+The artifact is also build automatically whenever code is pushed or pulled, using the [Build GitHub Workflow](https://github.com/melahn/archive-extract/blob/main/.github/workflows/build.yml).
+
+The artifact can also be built locally using the default maven build profile. This has been tested with Maven 3.8.3 though other versions >= 3 should also work.  
 
 You will see a warning
 
